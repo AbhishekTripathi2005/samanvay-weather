@@ -25,7 +25,9 @@ import {
   OpsHistoryResponse,
   CustomBlendRequest,
   CustomBlendResponse,
-  OpsRunResponse
+  OpsRunResponse,
+  PlumeResponse,
+  WeightsMapResponse
 } from "./types";
 
 // Standard query configuration: Stale-While-Revalidate with caching
@@ -50,7 +52,11 @@ export const queryKeys = {
   regimesWeights: ["regimesWeights"] as const,
   shimlaImpact: (r?: number, a?: number) => ["shimlaImpact", r ?? 85, a ?? 142] as const,
   opsPipeline: ["opsPipeline"] as const,
-  opsHistory: (limit: number) => ["opsHistory", limit] as const
+  opsHistory: (limit: number) => ["opsHistory", limit] as const,
+  forecastPlume: (r?: string, v?: string, d?: string, reg?: string, m?: string, hl?: number, t?: number) =>
+    ["forecastPlume", r || "DL", v || "rainfall", d || "today", reg || "auto", m || "stacked_nnls", hl ?? 14, t ?? 1.0] as const,
+  weightsMap: (v?: string, l?: number, s?: string, reg?: string, m?: string) =>
+    ["weightsMap", v || "rainfall", l ?? 72, s || "JJAS", reg || "Active monsoon", m || "stacked_nnls"] as const
 };
 
 // 1. Meta Query
@@ -282,3 +288,50 @@ export function useOpsRunMutation() {
     }
   });
 }
+
+// 21. Forecast Plume Query (Workbench)
+export function useForecastPlumeQuery(params: {
+  region?: string;
+  variable?: string;
+  date?: string;
+  regime?: string;
+  method?: string;
+  half_life?: number;
+  temperature?: number;
+}) {
+  return useQuery({
+    queryKey: queryKeys.forecastPlume(
+      params.region,
+      params.variable,
+      params.date,
+      params.regime,
+      params.method,
+      params.half_life,
+      params.temperature
+    ),
+    queryFn: () => api.fetchForecastPlume(params),
+    staleTime: STALE_TIME
+  });
+}
+
+// 22. Regional Weights Map Query (Adaptive Weights)
+export function useWeightsMapQuery(params: {
+  variable?: string;
+  lead?: number;
+  season?: string;
+  regime?: string;
+  method?: string;
+}) {
+  return useQuery({
+    queryKey: queryKeys.weightsMap(
+      params.variable,
+      params.lead,
+      params.season,
+      params.regime,
+      params.method
+    ),
+    queryFn: () => api.fetchWeightsMap(params),
+    staleTime: STALE_TIME
+  });
+}
+

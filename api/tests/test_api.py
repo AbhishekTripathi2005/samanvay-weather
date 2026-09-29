@@ -232,6 +232,31 @@ class TestAllEndpoints(unittest.TestCase):
             self.assertEqual(res.status_code, 200, f"Export format {fmt} failed")
             self.assertIn("content-disposition", res.headers)
 
+    # 23. /api/forecast/plume
+    def test_23_forecast_plume(self):
+        res = self.client.get("/api/forecast/plume?region=DL&variable=rainfall")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["region"]["code"], "DL")
+        self.assertEqual(len(data["timeline"]), 10)
+        self.assertEqual(len(data["quantile_data"]), 21)
+        self.assertEqual(len(data["model_scorecards"]), 8)
+        self.assertIn("insights", data)
+
+    # 24. /api/weights/map
+    def test_24_weights_map(self):
+        res = self.client.get("/api/weights/map?variable=rainfall&lead=72")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(len(data["regions"]), 36)
+        # Check that weights sum to 1.0 for each region
+        for r in data["regions"]:
+            w_sum = sum(r["weights"].values())
+            self.assertAlmostEqual(w_sum, 1.0, places=3)
+            self.assertIn(r["dominant_model"], r["weights"])
+        self.assertEqual(len(data["reliability_matrix"]["rows"]), 10)
+        self.assertEqual(len(data["insights"]), 4)
+
     # Legacy endpoints
     def test_legacy_health_and_config(self):
         h = self.client.get("/api/health")

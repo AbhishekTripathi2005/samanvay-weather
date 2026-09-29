@@ -43,8 +43,9 @@ export function RadialWeights({
       </div>
 
       <div className="w-full h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart data={chartData} margin={{ top: 10, right: 15, bottom: 10, left: 15 }}>
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={chartData} margin={{ top: 10, right: 15, bottom: 10, left: 15 }}>
             <PolarGrid stroke="rgba(255,255,255,0.08)" />
             <PolarAngleAxis dataKey="model" stroke="#94A3B8" fontSize={10} />
             <PolarRadiusAxis angle={30} domain={[0, 40]} stroke="#64748B" fontSize={9} />
@@ -69,6 +70,11 @@ export function RadialWeights({
             />
           </RadarChart>
         </ResponsiveContainer>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-xs font-mono text-text-3">Loading weights...</span>
+          </div>
+        )}
       </div>
     </GlassCard>
   );

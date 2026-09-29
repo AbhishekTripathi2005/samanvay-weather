@@ -676,3 +676,120 @@ export interface MapGridResponse {
   max_value: number;
   mean_value: number;
 }
+
+export interface PlumeTimelinePoint {
+  lead_day: number;
+  lead_hours: number;
+  label: string;
+  samanvay: number;
+  p10: number;
+  p50: number;
+  p90: number;
+  truth: number;
+  weights: Record<string, number>;
+  ncum_g: number;
+  neps: number;
+  imd_gfs: number;
+  ecmwf_ifs: number;
+  graphcast: number;
+  pangu: number;
+  fourcastnet: number;
+  [key: string]: any;
+}
+
+export interface QuantileDataPoint {
+  percentile: number;
+  observed: number;
+  raw: number;
+  corrected: number;
+  tail_marker: boolean;
+}
+
+export interface ModelScorecardItem {
+  id: string;
+  name: string;
+  type: string;
+  color: string;
+  badge: string;
+  bias: number;
+  mae: number;
+  rmse: number;
+  corr: number;
+}
+
+export interface PlumeResponse {
+  region: RegionState;
+  variable: string;
+  regime: string;
+  method: string;
+  timeline: PlumeTimelinePoint[];
+  quantile_data: QuantileDataPoint[];
+  model_scorecards: ModelScorecardItem[];
+  insights: string[];
+}
+
+export interface RegionWeightDetail {
+  code: string;
+  name: string;
+  zone: string;
+  terrain: string;
+  lat: number;
+  lon: number;
+  weights: Record<string, number>;
+  dominant_model: string;
+  dominant_color: string;
+  dominant_type: string;
+  top_3: Array<{
+    id: string;
+    name: string;
+    type: string;
+    color: string;
+    weight: number;
+    percentage: number;
+  }>;
+  confidence: number;
+  sample_size: number;
+}
+
+export interface ReliabilityMatrixRow {
+  lead: number;
+  lead_day: number;
+  label: string;
+  [regionCode: string]: any;
+}
+
+export interface WeightsMapInsight {
+  id: string;
+  title: string;
+  metric: string;
+  description: string;
+  badge: string;
+}
+
+export interface WeightsMapResponse {
+  variable: string;
+  lead_hours: number;
+  lead_day: number;
+  season: string;
+  regime: string;
+  method: string;
+  regions: RegionWeightDetail[];
+  reliability_matrix: {
+    leads: number[];
+    rows: ReliabilityMatrixRow[];
+  };
+  default_evolution: Array<{
+    lead: number;
+    day: string;
+    [modelId: string]: any;
+  }>;
+  insights: WeightsMapInsight[];
+  models_meta: Array<{
+    id: string;
+    name: string;
+    type: string;
+    color: string;
+    badge: string;
+  }>;
+}
+

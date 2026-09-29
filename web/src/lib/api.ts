@@ -28,7 +28,9 @@ import {
   BlendingWeightsResponse,
   EnsembleDistributionResponse,
   PINNStudyMetrics,
-  MapGridResponse
+  MapGridResponse,
+  PlumeResponse,
+  WeightsMapResponse
 } from "./types";
 
 const API_BASE = typeof window !== "undefined" ? "/api" : "http://127.0.0.1:8000/api";
@@ -282,3 +284,42 @@ export async function fetchMapGrid(
     `/map/grid?variable=${encodeURIComponent(variable)}&lead=${lead}&regime=${encodeURIComponent(regime)}&season=${encodeURIComponent(season)}&source=${encodeURIComponent(source)}`
   );
 }
+
+// 23. Forecast Plume & Quantile CDF Data
+export async function fetchForecastPlume(params: {
+  region?: string;
+  variable?: string;
+  date?: string;
+  regime?: string;
+  method?: string;
+  half_life?: number;
+  temperature?: number;
+}): Promise<PlumeResponse> {
+  const qs = new URLSearchParams();
+  if (params.region) qs.set("region", params.region);
+  if (params.variable) qs.set("variable", params.variable);
+  if (params.date) qs.set("date", params.date);
+  if (params.regime) qs.set("regime", params.regime);
+  if (params.method) qs.set("method", params.method);
+  if (params.half_life !== undefined) qs.set("half_life", params.half_life.toString());
+  if (params.temperature !== undefined) qs.set("temperature", params.temperature.toString());
+  return request<PlumeResponse>(`/forecast/plume?${qs.toString()}`);
+}
+
+// 24. Regional Weights Map & Reliability Matrix
+export async function fetchWeightsMap(params: {
+  variable?: string;
+  lead?: number;
+  season?: string;
+  regime?: string;
+  method?: string;
+}): Promise<WeightsMapResponse> {
+  const qs = new URLSearchParams();
+  if (params.variable) qs.set("variable", params.variable);
+  if (params.lead !== undefined) qs.set("lead", params.lead.toString());
+  if (params.season) qs.set("season", params.season);
+  if (params.regime) qs.set("regime", params.regime);
+  if (params.method) qs.set("method", params.method);
+  return request<WeightsMapResponse>(`/weights/map?${qs.toString()}`);
+}
+
