@@ -22,7 +22,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Kbd } from "@/components/ui/Kbd";
 
 export const NAVIGATION_ROUTES = [
-  { path: "/", label: "Overview", icon: LayoutDashboard, key: "1", desc: "National Command Center" },
+  { path: "/overview", label: "Command Center", icon: LayoutDashboard, key: "1", desc: "National Command Center" },
   { path: "/forecast", label: "Forecast Explorer", icon: Map, key: "2", desc: "0.5° Grid & Regional Consensus" },
   { path: "/models", label: "Model Matrix", icon: Layers, key: "3", desc: "7 Models vs Blended Skill" },
   { path: "/extremes", label: "Disaster DSS", icon: AlertTriangle, key: "4", desc: "Extreme Weather Alerts" },

@@ -13,7 +13,7 @@ export function MobileNav() {
   const { isMobileNavOpen, setIsMobileNavOpen, theme, toggleTheme } = useAppStore();
 
   const primaryTabs = [
-    { path: "/", label: "Overview", icon: LayoutDashboard },
+    { path: "/overview", label: "Overview", icon: LayoutDashboard },
     { path: "/forecast", label: "Forecast", icon: Map },
     { path: "/extremes", label: "Alerts", icon: AlertTriangle },
     { path: "/impact", label: "Impact", icon: Mountain }

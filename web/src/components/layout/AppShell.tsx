@@ -14,6 +14,22 @@ import { usePathname } from "next/navigation";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isLanding = pathname === "/";
+
+  if (isLanding) {
+    return (
+      <div className="min-h-screen w-screen overflow-x-hidden bg-surface-0 text-text-1">
+        <React.Suspense fallback={null}>
+          <UrlSync />
+        </React.Suspense>
+        <KeyboardShortcuts />
+        <RunBlendModal />
+        <AlertsDrawer />
+        <Toaster position="top-right" richColors />
+        <main className="w-full min-h-screen">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-surface-0 text-text-1">

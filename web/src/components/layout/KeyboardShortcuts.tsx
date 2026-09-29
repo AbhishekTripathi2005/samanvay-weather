@@ -30,6 +30,13 @@ export function KeyboardShortcuts() {
         return;
       }
 
+      // 0: return to landing showcase
+      if (e.key === "0") {
+        e.preventDefault();
+        router.push("/");
+        return;
+      }
+
       // 1-9 direct page jump
       if (e.key >= "1" && e.key <= "9") {
         const index = parseInt(e.key, 10) - 1;
