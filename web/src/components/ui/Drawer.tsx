@@ -10,6 +10,7 @@ interface DrawerProps {
   title: string;
   children: React.ReactNode;
   position?: "right" | "bottom";
+  side?: "right" | "bottom";
 }
 
 export function Drawer({
@@ -18,7 +19,9 @@ export function Drawer({
   title,
   children,
   position = "right",
+  side,
 }: DrawerProps) {
+  const pos = side || position;
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -47,8 +50,8 @@ export function Drawer({
       <div
         className={cn(
           "relative z-10 flex flex-col bg-[var(--surface-1)] border border-[var(--border)] shadow-2xl p-5 backdrop-blur-xl font-mono text-xs",
-          position === "right" && "ml-auto h-full w-full max-w-md animate-in slide-in-from-right",
-          position === "bottom" && "mt-auto w-full max-h-[80vh] rounded-t-2xl animate-in slide-in-from-bottom"
+          pos === "right" && "ml-auto h-full w-full max-w-md animate-in slide-in-from-right",
+          pos === "bottom" && "mt-auto w-full max-h-[80vh] rounded-t-2xl animate-in slide-in-from-bottom"
         )}
       >
         <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">

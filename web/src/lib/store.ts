@@ -1,40 +1,110 @@
+// SAMANVAY Global State Management (Zustand)
+// MoES / NCMRWF (PS 26081)
+
 import { create } from "zustand";
 
-interface OpsState {
+export const AVAILABLE_LEADS = [24, 48, 72, 96, 120, 144, 168, 192, 216, 240];
+
+export interface FilterState {
   variable: string;
   lead: number;
-  regime: string;
+  region: string;
   season: string;
-  selectedRegion: string;
-  selectedSource: string;
-  theme: "dark" | "light";
-  isAutoAdvancing: boolean;
-  setVariable: (v: string) => void;
-  setLead: (l: number) => void;
-  setRegime: (r: string) => void;
-  setSeason: (s: string) => void;
-  setSelectedRegion: (code: string) => void;
-  setSelectedSource: (src: string) => void;
-  toggleTheme: () => void;
-  setIsAutoAdvancing: (adv: boolean) => void;
-  syncFromUrl: (params: URLSearchParams) => void;
+  regime: string;
+  method: string;
 }
 
-export const useOpsStore = create<OpsState>((set) => ({
+interface AppState extends FilterState {
+  // Navigation & Shell state
+  sidebarCollapsed: boolean;
+  theme: "dark" | "light";
+  
+  // Modals & Panels
+  isShortcutsOpen: boolean;
+  isRunBlendOpen: boolean;
+  isAlertsOpen: boolean;
+  isMobileNavOpen: boolean;
+
+  selectedRegion: string;
+  selectedSource: string;
+  isAutoAdvancing: boolean;
+
+  // Actions
+  setVariable: (v: string) => void;
+  setLead: (l: number) => void;
+  stepLead: (direction: -1 | 1) => void;
+  setRegion: (r: string) => void;
+  setSeason: (s: string) => void;
+  setRegime: (r: string) => void;
+  setMethod: (m: string) => void;
+  setFilters: (filters: Partial<FilterState>) => void;
+  
+  toggleSidebar: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  toggleTheme: () => void;
+  setTheme: (theme: "dark" | "light") => void;
+
+  setIsShortcutsOpen: (open: boolean) => void;
+  setIsRunBlendOpen: (open: boolean) => void;
+  setIsAlertsOpen: (open: boolean) => void;
+  setIsMobileNavOpen: (open: boolean) => void;
+
+  setSelectedRegion: (code: string) => void;
+  setSelectedSource: (src: string) => void;
+  setIsAutoAdvancing: (adv: boolean) => void;
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
+  // Defaults
   variable: "rainfall",
-  lead: 24,
-  regime: "Active monsoon",
+  lead: 72,
+  region: "DL",
   season: "JJAS",
+  regime: "auto",
+  method: "adaptive",
+
+  sidebarCollapsed: false,
+  theme: "dark",
+
+  isShortcutsOpen: false,
+  isRunBlendOpen: false,
+  isAlertsOpen: false,
+  isMobileNavOpen: false,
+
   selectedRegion: "DL",
   selectedSource: "samanvay",
-  theme: "dark",
   isAutoAdvancing: false,
+
   setVariable: (variable) => set({ variable }),
   setLead: (lead) => set({ lead }),
-  setRegime: (regime) => set({ regime }),
+  stepLead: (direction) => {
+    const currentLead = get().lead;
+    const currentIndex = AVAILABLE_LEADS.indexOf(currentLead);
+    if (currentIndex === -1) {
+      set({ lead: AVAILABLE_LEADS[0] });
+      return;
+    }
+    const nextIndex = Math.max(0, Math.min(AVAILABLE_LEADS.length - 1, currentIndex + direction));
+    set({ lead: AVAILABLE_LEADS[nextIndex] });
+  },
+  setRegion: (region) => set({ region }),
   setSeason: (season) => set({ season }),
-  setSelectedRegion: (selectedRegion) => set({ selectedRegion }),
-  setSelectedSource: (selectedSource) => set({ selectedSource }),
+  setRegime: (regime) => set({ regime }),
+  setMethod: (method) => set({ method }),
+  setFilters: (filters) => set((state) => ({ ...state, ...filters })),
+
+  toggleSidebar: () =>
+    set((state) => {
+      const next = !state.sidebarCollapsed;
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("samanvay-sidebar-collapsed", JSON.stringify(next));
+        } catch {}
+      }
+      return { sidebarCollapsed: next };
+    }),
+  setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
+
   toggleTheme: () =>
     set((state) => {
       const nextTheme = state.theme === "dark" ? "light" : "dark";
@@ -46,25 +116,23 @@ export const useOpsStore = create<OpsState>((set) => ({
           document.documentElement.classList.add("light");
           document.documentElement.classList.remove("dark");
         }
+        try {
+          localStorage.setItem("samanvay-theme", nextTheme);
+        } catch {}
       }
       return { theme: nextTheme };
     }),
-  setIsAutoAdvancing: (isAutoAdvancing) => set({ isAutoAdvancing }),
-  syncFromUrl: (params: URLSearchParams) => {
-    const variable = params.get("var");
-    const lead = params.get("lead");
-    const regime = params.get("regime");
-    const season = params.get("season");
-    const region = params.get("region");
-    const source = params.get("source");
+  setTheme: (theme) => set({ theme }),
 
-    set((state) => ({
-      variable: variable || state.variable,
-      lead: lead ? parseInt(lead, 10) : state.lead,
-      regime: regime || state.regime,
-      season: season || state.season,
-      selectedRegion: region || state.selectedRegion,
-      selectedSource: source || state.selectedSource
-    }));
-  }
+  setIsShortcutsOpen: (isShortcutsOpen) => set({ isShortcutsOpen }),
+  setIsRunBlendOpen: (isRunBlendOpen) => set({ isRunBlendOpen }),
+  setIsAlertsOpen: (isAlertsOpen) => set({ isAlertsOpen }),
+  setIsMobileNavOpen: (isMobileNavOpen) => set({ isMobileNavOpen }),
+
+  setSelectedRegion: (selectedRegion) => set({ selectedRegion, region: selectedRegion }),
+  setSelectedSource: (selectedSource) => set({ selectedSource }),
+  setIsAutoAdvancing: (isAutoAdvancing) => set({ isAutoAdvancing })
 }));
+
+// Backwards compatibility alias
+export const useOpsStore = useAppStore;

@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 export type AlertTier = "GREEN" | "YELLOW" | "ORANGE" | "RED";
 
 interface AlertBadgeProps {
-  tier: AlertTier;
+  tier?: AlertTier;
+  level?: AlertTier;
   text?: string;
   showPattern?: boolean;
   className?: string;
@@ -15,10 +16,12 @@ interface AlertBadgeProps {
 
 export function AlertBadge({
   tier,
+  level,
   text,
   showPattern = true,
   className,
 }: AlertBadgeProps) {
+  const activeTier = tier || level || 'GREEN';
   const configs = {
     GREEN: {
       color: "var(--alert-green)",
@@ -58,7 +61,7 @@ export function AlertBadge({
     },
   };
 
-  const c = configs[tier];
+  const c = configs[activeTier];
 
   return (
     <span

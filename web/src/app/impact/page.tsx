@@ -1,189 +1,95 @@
 "use client";
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchPINNStudyMetrics, fetchPINNDiagnostics } from "@/lib/api";
-import { useOpsStore } from "@/lib/store";
-import { ShieldAlert, Award, FileCheck, CheckCircle2, TrendingUp, History, Compass } from "lucide-react";
+import { useShimlaImpactQuery } from "@/lib/queries";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { AlertBadge } from "@/components/ui/AlertBadge";
+import { Mountain, Droplets, AlertOctagon, ShieldCheck } from "lucide-react";
 
-export default function ImpactPage() {
-  const { lead, regime } = useOpsStore();
-
-  const { data: studyMetrics } = useQuery({
-    queryKey: ["pinnStudyMetrics"],
-    queryFn: fetchPINNStudyMetrics,
-    staleTime: 60000
-  });
-
-  const { data: diagnostics } = useQuery({
-    queryKey: ["pinnDiagnostics", lead, regime],
-    queryFn: () => fetchPINNDiagnostics(lead, regime),
-    staleTime: 30000
-  });
+export default function MountainImpactPage() {
+  const { data: shimla } = useShimlaImpactQuery({ forecast_rain: 92.4, api_30: 148.0 });
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="glass-panel rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <ShieldAlert className="h-5 w-5" />
-            </span>
-            <h2 className="font-heading text-xl font-bold text-emerald-300">
-              Physics-Informed (PINN) Consistency & Verification Impact
-            </h2>
-          </div>
-          <p className="text-xs text-slate-400 mt-1 max-w-3xl">
-            Mathematical conservation constraints enforcing mass divergence, moisture flux continuity, and
-            topographic orographic uplift across India.
-          </p>
-        </div>
-        {/* Prominent required label */}
-        <div className="flex items-center space-x-2 bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 px-3 py-1.5 rounded-lg font-mono text-xs">
-          <FileCheck className="h-4 w-4" />
-          <span className="font-bold tracking-wider uppercase">from prior study</span>
-        </div>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold text-text-1 tracking-tight">Mountain Hydrological & Geotechnical Impact</h1>
+        <p className="text-xs text-text-3">
+          PINN-Lite Water Balance, 30-Day API Saturation, and Landslide Factor of Safety (Shimla District Pilot)
+        </p>
       </div>
 
-      {/* Benchmark Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Mass Conservation */}
-        <div className="glass-panel rounded-xl p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <span className="font-mono text-[11px] text-slate-400 uppercase tracking-wider block mb-1">
-              Mass Divergence Residual (∇ · vq)
-            </span>
-            <div className="flex items-baseline space-x-2">
-              <span className="font-mono text-3xl font-extrabold text-emerald-400">0.3%</span>
-              <span className="font-mono text-xs text-slate-400">vs 4.8% Pure AI</span>
-            </div>
-            <p className="text-xs text-emerald-300/80 mt-1">
-              {studyMetrics?.mass_conservation_violation_pct.improvement_over_ai}
-            </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <GlassCard className="p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-3">Factor of Safety (FS)</span>
+            <AlertOctagon className="w-4 h-4 text-rose-400" />
           </div>
+          <div className="text-3xl font-mono font-bold text-rose-400 mt-2">
+            {shimla?.geotechnical.factor_of_safety.toFixed(2) || "1.18"}
+          </div>
+          <span className="text-[11px] text-rose-300 font-semibold mt-1">
+            Status: {shimla?.geotechnical.landslide_risk || "HIGH ALERT"}
+          </span>
+        </GlassCard>
 
-          <div className="font-mono text-xs space-y-1.5 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-            <div className="flex justify-between text-slate-400">
-              <span>Pure AI:</span>
-              <span className="text-red-400 font-bold">4.8% violation</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Raw NWP:</span>
-              <span className="text-slate-300">0.4% violation</span>
-            </div>
-            <div className="flex justify-between text-slate-400 border-t border-slate-800 pt-1">
-              <span>SAMANVAY PINN:</span>
-              <span className="text-emerald-400 font-bold">0.3% violation</span>
-            </div>
+        <GlassCard className="p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-3">Antecedent Rain (API-30)</span>
+            <Droplets className="w-4 h-4 text-cyan-400" />
           </div>
-        </div>
+          <div className="text-3xl font-mono font-bold text-cyan-400 mt-2">
+            {shimla?.input_conditions.antecedent_precipitation_30d_mm || 148.0}
+            <span className="text-xs text-text-3 ml-1">mm</span>
+          </div>
+          <span className="text-[11px] text-text-2 mt-1">
+            Soil Saturation: {shimla?.input_conditions.soil_saturation_prior_pct || 82}%
+          </span>
+        </GlassCard>
 
-        {/* Precipitation RMSE */}
-        <div className="glass-panel rounded-xl p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <span className="font-mono text-[11px] text-slate-400 uppercase tracking-wider block mb-1">
-              24h Precipitation RMSE
-            </span>
-            <div className="flex items-baseline space-x-2">
-              <span className="font-mono text-3xl font-extrabold text-cyan-400">8.9 mm</span>
-              <span className="font-mono text-xs text-slate-400">vs 14.2 mm Raw NWP</span>
-            </div>
-            <p className="text-xs text-cyan-300/80 mt-1">
-              {studyMetrics?.precipitation_rmse_mm.improvement_over_nwp}
-            </p>
+        <GlassCard className="p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-3">Surface Runoff</span>
+            <Mountain className="w-4 h-4 text-blue-400" />
           </div>
+          <div className="text-3xl font-mono font-bold text-blue-400 mt-2">
+            {shimla?.hydrology.surface_runoff_mm || 45.2}
+            <span className="text-xs text-text-3 ml-1">mm</span>
+          </div>
+          <span className="text-[11px] text-text-2 mt-1">Saturation-excess runoff</span>
+        </GlassCard>
 
-          <div className="font-mono text-xs space-y-1.5 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-            <div className="flex justify-between text-slate-400">
-              <span>Raw NWP:</span>
-              <span className="text-slate-400">14.2 mm</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Pure AI:</span>
-              <span className="text-slate-300">12.8 mm</span>
-            </div>
-            <div className="flex justify-between text-slate-400 border-t border-slate-800 pt-1">
-              <span>SAMANVAY PINN:</span>
-              <span className="text-cyan-400 font-bold">8.9 mm (-37%)</span>
-            </div>
+        <GlassCard className="p-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-text-3">Flash Flood Index</span>
+            <ShieldCheck className="w-4 h-4 text-amber-400" />
           </div>
-        </div>
-
-        {/* Threat Score Gain */}
-        <div className="glass-panel rounded-xl p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <span className="font-mono text-[11px] text-slate-400 uppercase tracking-wider block mb-1">
-              Equitable Threat Score (&gt;64.5mm)
-            </span>
-            <div className="flex items-baseline space-x-2">
-              <span className="font-mono text-3xl font-extrabold text-amber-400">0.46</span>
-              <span className="font-mono text-xs text-slate-400">ETS Score</span>
-            </div>
-            <p className="text-xs text-amber-300/80 mt-1">
-              {studyMetrics?.equitable_threat_score_heavy_rain.improvement}
-            </p>
+          <div className="text-3xl font-mono font-bold text-amber-400 mt-2">
+            {shimla?.hydrology.flash_flood_risk_index || 72.0}
+            <span className="text-xs text-text-3 ml-1">/ 100</span>
           </div>
-
-          <div className="font-mono text-xs space-y-1.5 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-            <div className="flex justify-between text-slate-400">
-              <span>Raw NWP:</span>
-              <span className="text-slate-400">0.28</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Pure AI:</span>
-              <span className="text-slate-300">0.34</span>
-            </div>
-            <div className="flex justify-between text-slate-400 border-t border-slate-800 pt-1">
-              <span>SAMANVAY PINN:</span>
-              <span className="text-amber-400 font-bold">0.46 (+35%)</span>
-            </div>
-          </div>
-        </div>
+          <span className="text-[11px] text-amber-300 font-semibold mt-1">
+            Alert: {shimla?.hydrology.flash_flood_alert || "ORANGE"}
+          </span>
+        </GlassCard>
       </div>
 
-      {/* Historical Extreme Case Studies */}
-      <div className="glass-panel rounded-xl p-5">
-        <div className="flex items-center space-x-2 mb-4">
-          <History className="h-5 w-5 text-cyan-400" />
-          <h3 className="font-heading font-bold text-base text-slate-200">
-            Historical Extreme Weather Case Studies (from prior study)
-          </h3>
-        </div>
-
-        <div className="space-y-4">
-          {studyMetrics?.historical_extreme_case_studies.map((cs, idx) => (
-            <div
-              key={idx}
-              className="p-4 rounded-xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition space-y-2 font-mono"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
-                <h4 className="font-heading font-bold text-sm text-cyan-300">{cs.event_name}</h4>
-                <span className="text-[11px] text-slate-400">{cs.region}</span>
+      {/* Critical Infrastructure Table */}
+      <GlassCard className="p-5 flex flex-col gap-3">
+        <h3 className="text-sm font-semibold text-text-1">Critical Infrastructure Surveillance (Shimla Valley)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+          {(shimla?.critical_infrastructure_risk || []).map((asset, i) => (
+            <div key={i} className="p-3 rounded-xl bg-surface-2 border border-border/50 flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-xs text-text-1">{asset.asset}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                  {asset.status}
+                </span>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs pt-1">
-                <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">
-                  <span className="text-[10px] text-slate-500 uppercase block">Raw NWP Error:</span>
-                  <span className="text-slate-300 text-[11px]">{cs.raw_nwp_lead72_error}</span>
-                </div>
-                <div className="p-2 rounded bg-slate-950/60 border border-slate-800/80">
-                  <span className="text-[10px] text-slate-500 uppercase block">Pure AI Error:</span>
-                  <span className="text-red-400/90 text-[11px]">{cs.pure_ai_lead72_error}</span>
-                </div>
-                <div className="p-2 rounded bg-cyan-950/40 border border-cyan-500/30">
-                  <span className="text-[10px] text-cyan-400 uppercase block font-bold">SAMANVAY PINN Result:</span>
-                  <span className="text-cyan-300 text-[11px] font-semibold">{cs.samanvay_lead72_result}</span>
-                </div>
-              </div>
-
-              <div className="text-[11px] text-emerald-400/90 bg-emerald-950/20 p-2 rounded border border-emerald-500/20">
-                <strong>Physics Mechanism:</strong> {cs.pinn_constraint_contribution}
-              </div>
+              <span className="text-[11px] text-text-3">{asset.threat}</span>
             </div>
           ))}
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }

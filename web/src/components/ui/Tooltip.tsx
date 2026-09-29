@@ -7,6 +7,7 @@ interface TooltipProps {
   content: string;
   children: React.ReactNode;
   position?: "top" | "bottom" | "left" | "right";
+  side?: "top" | "bottom" | "left" | "right";
   className?: string;
 }
 
@@ -14,8 +15,10 @@ export function Tooltip({
   content,
   children,
   position = "top",
+  side,
   className,
 }: TooltipProps) {
+  const pos = side || position;
   const [isVisible, setIsVisible] = useState(false);
 
   const positionClasses = {
@@ -39,7 +42,7 @@ export function Tooltip({
           role="tooltip"
           className={cn(
             "absolute z-50 whitespace-nowrap rounded-md border border-[var(--border-strong)] bg-[var(--surface-3)] px-2 py-1 font-mono text-[10px] text-[var(--text-1)] shadow-xl pointer-events-none animate-in fade-in-50",
-            positionClasses[position]
+            positionClasses[pos]
           )}
         >
           {content}

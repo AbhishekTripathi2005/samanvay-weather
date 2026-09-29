@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
   label: string;
-  value: number;
+  value: number | string;
   unit?: string;
   decimals?: number;
   delta?: {
-    value: number;
+    value: number | string;
+    isPositive?: boolean;
     isPositiveGood?: boolean;
     period?: string;
   };
@@ -44,7 +45,7 @@ export function MetricCard({
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       // easeOutExpo
       const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      setDisplayValue(ease * value);
+      if (typeof value === 'number') { setDisplayValue(ease * value); } else { setDisplayValue(parseFloat(value) || 0); }
       if (progress < 1) {
         window.requestAnimationFrame(step);
       }
@@ -66,7 +67,7 @@ export function MetricCard({
     })
     .join(" ");
 
-  const isPositive = delta ? delta.value >= 0 : true;
+  const isPositive = delta ? (typeof delta.isPositive === 'boolean' ? delta.isPositive : (typeof delta.value === 'number' ? delta.value >= 0 : !delta.value.startsWith('-'))) : true;
 
   return (
     <GlassCard elevation={2} hoverLift className={cn("p-4 flex flex-col justify-between", className)}>
@@ -96,8 +97,7 @@ export function MetricCard({
               <ArrowDownRight className="h-3 w-3" />
             )}
             <span>
-              {isPositive ? "+" : ""}
-              {delta.value}%
+              {typeof delta.value === 'number' ? (isPositive ? `+${delta.value}%` : `${delta.value}%`) : delta.value}
             </span>
           </span>
         )}
