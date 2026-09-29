@@ -1,0 +1,737 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "HP_SHM",
+      "properties": {
+        "id": "HP_SHM",
+        "name": "Shimla",
+        "state": "Himachal Pradesh",
+        "state_code": "HP",
+        "terrain": "Steep Himalayan Slope",
+        "slope_deg": 34.5,
+        "elevation_m": 2276,
+        "pop_thousands": 814,
+        "center": [
+          77.1734,
+          31.1048
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.9234,
+              30.954800000000002
+            ],
+            [
+              77.0734,
+              30.8548
+            ],
+            [
+              77.2734,
+              30.8548
+            ],
+            [
+              77.4234,
+              30.954800000000002
+            ],
+            [
+              77.4234,
+              31.2548
+            ],
+            [
+              77.2734,
+              31.3548
+            ],
+            [
+              77.0734,
+              31.3548
+            ],
+            [
+              76.9234,
+              31.2548
+            ],
+            [
+              76.9234,
+              30.954800000000002
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "UT_CHM",
+      "properties": {
+        "id": "UT_CHM",
+        "name": "Chamoli",
+        "state": "Uttarakhand",
+        "state_code": "UT",
+        "terrain": "High Himalayan Glacial Valley",
+        "slope_deg": 38.0,
+        "elevation_m": 2600,
+        "pop_thousands": 391,
+        "center": [
+          79.3243,
+          30.4138
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              79.0743,
+              30.2638
+            ],
+            [
+              79.2243,
+              30.1638
+            ],
+            [
+              79.42429999999999,
+              30.1638
+            ],
+            [
+              79.5743,
+              30.2638
+            ],
+            [
+              79.5743,
+              30.563799999999997
+            ],
+            [
+              79.42429999999999,
+              30.6638
+            ],
+            [
+              79.2243,
+              30.6638
+            ],
+            [
+              79.0743,
+              30.563799999999997
+            ],
+            [
+              79.0743,
+              30.2638
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "KL_WYD",
+      "properties": {
+        "id": "KL_WYD",
+        "name": "Wayanad",
+        "state": "Kerala",
+        "state_code": "KL",
+        "terrain": "Western Ghats Escarpment",
+        "slope_deg": 28.5,
+        "elevation_m": 950,
+        "pop_thousands": 817,
+        "center": [
+          76.132,
+          11.6854
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.882,
+              11.5354
+            ],
+            [
+              76.03200000000001,
+              11.4354
+            ],
+            [
+              76.232,
+              11.4354
+            ],
+            [
+              76.382,
+              11.5354
+            ],
+            [
+              76.382,
+              11.8354
+            ],
+            [
+              76.232,
+              11.9354
+            ],
+            [
+              76.03200000000001,
+              11.9354
+            ],
+            [
+              75.882,
+              11.8354
+            ],
+            [
+              75.882,
+              11.5354
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "MH_MUM",
+      "properties": {
+        "id": "MH_MUM",
+        "name": "Mumbai City",
+        "state": "Maharashtra",
+        "state_code": "MH",
+        "terrain": "Coastal Urban Megacity",
+        "slope_deg": 4.2,
+        "elevation_m": 14,
+        "pop_thousands": 3145,
+        "center": [
+          72.8347,
+          18.922
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              72.5847,
+              18.772000000000002
+            ],
+            [
+              72.7347,
+              18.672
+            ],
+            [
+              72.93469999999999,
+              18.672
+            ],
+            [
+              73.0847,
+              18.772000000000002
+            ],
+            [
+              73.0847,
+              19.072
+            ],
+            [
+              72.93469999999999,
+              19.172
+            ],
+            [
+              72.7347,
+              19.172
+            ],
+            [
+              72.5847,
+              19.072
+            ],
+            [
+              72.5847,
+              18.772000000000002
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "MH_PUN",
+      "properties": {
+        "id": "MH_PUN",
+        "name": "Pune",
+        "state": "Maharashtra",
+        "state_code": "MH",
+        "terrain": "Deccan Plateau Foothills",
+        "slope_deg": 12.0,
+        "elevation_m": 560,
+        "pop_thousands": 9429,
+        "center": [
+          73.8567,
+          18.5204
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              73.6067,
+              18.3704
+            ],
+            [
+              73.75670000000001,
+              18.2704
+            ],
+            [
+              73.9567,
+              18.2704
+            ],
+            [
+              74.1067,
+              18.3704
+            ],
+            [
+              74.1067,
+              18.670399999999997
+            ],
+            [
+              73.9567,
+              18.7704
+            ],
+            [
+              73.75670000000001,
+              18.7704
+            ],
+            [
+              73.6067,
+              18.670399999999997
+            ],
+            [
+              73.6067,
+              18.3704
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "DL_NDL",
+      "properties": {
+        "id": "DL_NDL",
+        "name": "New Delhi",
+        "state": "Delhi (NCT)",
+        "state_code": "DL",
+        "terrain": "Yamuna Alluvial Floodplain",
+        "slope_deg": 2.1,
+        "elevation_m": 216,
+        "pop_thousands": 250,
+        "center": [
+          77.209,
+          28.6139
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              76.959,
+              28.463900000000002
+            ],
+            [
+              77.10900000000001,
+              28.3639
+            ],
+            [
+              77.309,
+              28.3639
+            ],
+            [
+              77.459,
+              28.463900000000002
+            ],
+            [
+              77.459,
+              28.7639
+            ],
+            [
+              77.309,
+              28.8639
+            ],
+            [
+              77.10900000000001,
+              28.8639
+            ],
+            [
+              76.959,
+              28.7639
+            ],
+            [
+              76.959,
+              28.463900000000002
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "RJ_JAI",
+      "properties": {
+        "id": "RJ_JAI",
+        "name": "Jaipur",
+        "state": "Rajasthan",
+        "state_code": "RJ",
+        "terrain": "Semi-Arid Aravalli Basin",
+        "slope_deg": 8.5,
+        "elevation_m": 431,
+        "pop_thousands": 3073,
+        "center": [
+          75.7873,
+          26.9124
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              75.5373,
+              26.762400000000003
+            ],
+            [
+              75.68730000000001,
+              26.6624
+            ],
+            [
+              75.8873,
+              26.6624
+            ],
+            [
+              76.0373,
+              26.762400000000003
+            ],
+            [
+              76.0373,
+              27.0624
+            ],
+            [
+              75.8873,
+              27.1624
+            ],
+            [
+              75.68730000000001,
+              27.1624
+            ],
+            [
+              75.5373,
+              27.0624
+            ],
+            [
+              75.5373,
+              26.762400000000003
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "OD_PUR",
+      "properties": {
+        "id": "OD_PUR",
+        "name": "Puri",
+        "state": "Odisha",
+        "state_code": "OD",
+        "terrain": "Bay of Bengal Coastal Lowland",
+        "slope_deg": 1.5,
+        "elevation_m": 10,
+        "pop_thousands": 1698,
+        "center": [
+          85.8312,
+          19.8135
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              85.5812,
+              19.663500000000003
+            ],
+            [
+              85.7312,
+              19.5635
+            ],
+            [
+              85.93119999999999,
+              19.5635
+            ],
+            [
+              86.0812,
+              19.663500000000003
+            ],
+            [
+              86.0812,
+              19.9635
+            ],
+            [
+              85.93119999999999,
+              20.0635
+            ],
+            [
+              85.7312,
+              20.0635
+            ],
+            [
+              85.5812,
+              19.9635
+            ],
+            [
+              85.5812,
+              19.663500000000003
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "TN_CHE",
+      "properties": {
+        "id": "TN_CHE",
+        "name": "Chennai",
+        "state": "Tamil Nadu",
+        "state_code": "TN",
+        "terrain": "Coromandel Coastal Plain",
+        "slope_deg": 1.8,
+        "elevation_m": 6,
+        "pop_thousands": 8696,
+        "center": [
+          80.2707,
+          13.0827
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              80.0207,
+              12.9327
+            ],
+            [
+              80.17070000000001,
+              12.8327
+            ],
+            [
+              80.3707,
+              12.8327
+            ],
+            [
+              80.5207,
+              12.9327
+            ],
+            [
+              80.5207,
+              13.232700000000001
+            ],
+            [
+              80.3707,
+              13.3327
+            ],
+            [
+              80.17070000000001,
+              13.3327
+            ],
+            [
+              80.0207,
+              13.232700000000001
+            ],
+            [
+              80.0207,
+              12.9327
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AS_KAM",
+      "properties": {
+        "id": "AS_KAM",
+        "name": "Kamrup Metropolitan",
+        "state": "Assam",
+        "state_code": "AS",
+        "terrain": "Brahmaputra Flood Basin",
+        "slope_deg": 5.4,
+        "elevation_m": 55,
+        "pop_thousands": 1253,
+        "center": [
+          91.7362,
+          26.1445
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              91.4862,
+              25.994500000000002
+            ],
+            [
+              91.6362,
+              25.8945
+            ],
+            [
+              91.83619999999999,
+              25.8945
+            ],
+            [
+              91.9862,
+              25.994500000000002
+            ],
+            [
+              91.9862,
+              26.2945
+            ],
+            [
+              91.83619999999999,
+              26.3945
+            ],
+            [
+              91.6362,
+              26.3945
+            ],
+            [
+              91.4862,
+              26.2945
+            ],
+            [
+              91.4862,
+              25.994500000000002
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "WB_DAR",
+      "properties": {
+        "id": "WB_DAR",
+        "name": "Darjeeling",
+        "state": "West Bengal",
+        "state_code": "WB",
+        "terrain": "Eastern Himalayan Foothills",
+        "slope_deg": 32.0,
+        "elevation_m": 2042,
+        "pop_thousands": 1846,
+        "center": [
+          88.2663,
+          27.041
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.0163,
+              26.891000000000002
+            ],
+            [
+              88.1663,
+              26.791
+            ],
+            [
+              88.3663,
+              26.791
+            ],
+            [
+              88.5163,
+              26.891000000000002
+            ],
+            [
+              88.5163,
+              27.191
+            ],
+            [
+              88.3663,
+              27.291
+            ],
+            [
+              88.1663,
+              27.291
+            ],
+            [
+              88.0163,
+              27.191
+            ],
+            [
+              88.0163,
+              26.891000000000002
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "JK_SGR",
+      "properties": {
+        "id": "JK_SGR",
+        "name": "Srinagar",
+        "state": "Jammu & Kashmir",
+        "state_code": "JK",
+        "terrain": "Kashmir Intermontane Basin",
+        "slope_deg": 14.0,
+        "elevation_m": 1585,
+        "pop_thousands": 1269,
+        "center": [
+          74.7973,
+          34.0837
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              74.5473,
+              33.9337
+            ],
+            [
+              74.69730000000001,
+              33.8337
+            ],
+            [
+              74.8973,
+              33.8337
+            ],
+            [
+              75.0473,
+              33.9337
+            ],
+            [
+              75.0473,
+              34.2337
+            ],
+            [
+              74.8973,
+              34.3337
+            ],
+            [
+              74.69730000000001,
+              34.3337
+            ],
+            [
+              74.5473,
+              34.2337
+            ],
+            [
+              74.5473,
+              33.9337
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
