@@ -186,3 +186,44 @@ export const IMD_THRESHOLDS_UI = {
     { label: "Violent Storm (Red)", min: 100.0, color: "#EF4444" }
   ]
 };
+
+export const MODELS = SOURCES_LIST;
+
+export const STATES_UTS: Array<{ code: string; name: string; zone: string }> = [
+  { code: "AN", name: "Andaman & Nicobar Islands", zone: "Southern Peninsular" },
+  { code: "AP", name: "Andhra Pradesh", zone: "Southern Peninsular" },
+  { code: "AR", name: "Arunachal Pradesh", zone: "Northeast India" },
+  { code: "AS", name: "Assam", zone: "Northeast India" },
+  { code: "BR", name: "Bihar", zone: "East & Central India" },
+  { code: "CH", name: "Chandigarh", zone: "Northwest India" },
+  { code: "CG", name: "Chhattisgarh", zone: "East & Central India" },
+  { code: "DD", name: "Dadra & Nagar Haveli and Daman & Diu", zone: "West Coast & Gujarat" },
+  { code: "DL", name: "Delhi (NCT)", zone: "Northwest India" },
+  { code: "GA", name: "Goa", zone: "West Coast & Gujarat" },
+  { code: "GJ", name: "Gujarat", zone: "West Coast & Gujarat" },
+  { code: "HR", name: "Haryana", zone: "Northwest India" },
+  { code: "HP", name: "Himachal Pradesh", zone: "Western Himalayas" },
+  { code: "JK", name: "Jammu & Kashmir", zone: "Western Himalayas" },
+  { code: "JH", name: "Jharkhand", zone: "East & Central India" },
+  { code: "KA", name: "Karnataka", zone: "Southern Peninsular" },
+  { code: "KL", name: "Kerala", zone: "Southern Peninsular" },
+  { code: "LA", name: "Ladakh", zone: "Western Himalayas" },
+  { code: "LD", name: "Lakshadweep", zone: "Southern Peninsular" },
+  { code: "MP", name: "Madhya Pradesh", zone: "East & Central India" },
+  { code: "MH", name: "Maharashtra", zone: "West Coast & Gujarat" },
+  { code: "MN", name: "Manipur", zone: "Northeast India" },
+  { code: "ML", name: "Meghalaya", zone: "Northeast India" },
+  { code: "MZ", name: "Mizoram", zone: "Northeast India" },
+  { code: "NL", name: "Nagaland", zone: "Northeast India" },
+  { code: "OD", name: "Odisha", zone: "East & Central India" },
+  { code: "PY", name: "Puducherry", zone: "Southern Peninsular" },
+  { code: "PB", name: "Punjab", zone: "Northwest India" },
+  { code: "RJ", name: "Rajasthan", zone: "Northwest India" },
+  { code: "SK", name: "Sikkim", zone: "Northeast India" },
+  { code: "TN", name: "Tamil Nadu", zone: "Southern Peninsular" },
+  { code: "TG", name: "Telangana", zone: "Southern Peninsular" },
+  { code: "TR", name: "Tripura", zone: "Northeast India" },
+  { code: "UP", name: "Uttar Pradesh", zone: "East & Central India" },
+  { code: "UT", name: "Uttarakhand", zone: "Western Himalayas" },
+  { code: "WB", name: "West Bengal", zone: "East & Central India" }
+];

@@ -18,7 +18,7 @@ class TestAllEndpoints(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         data = res.json()
         self.assertIn("models", data)
-        self.assertEqual(len(data["models"]), 8)  # 7 models + 1 blend
+        self.assertEqual(len(data["models"]), 9)  # 7 models + 1 blend + 1 equal_weight baseline
         self.assertIn("variables", data)
         self.assertEqual(len(data["variables"]), 5)
         self.assertIn("regions", data)
@@ -103,14 +103,37 @@ class TestAllEndpoints(unittest.TestCase):
 
     # 8. /api/skill
     def test_08_skill(self):
-        res = self.client.get("/api/skill?var=rainfall&lead=3")
+        res = self.client.get("/api/skill?var=rainfall&lead=3&metric=rmse")
         self.assertEqual(res.status_code, 200)
         data = res.json()
-        self.assertEqual(len(data["scorecard"]), 8)  # 7 models + 1 blend
+        self.assertEqual(len(data["scorecard"]), 9)  # 7 models + 1 blend + 1 equal_weight
         for s in data["scorecard"]:
             self.assertIn("metrics", s)
             self.assertIn("rmse", s["metrics"])
             self.assertIn("ets", s["metrics"])
+            self.assertIn("ci_lower", s)
+            self.assertIn("ci_upper", s)
+            self.assertIn("skill_improvement_pct", s)
+            # Verify 95% CI is valid: ci_lower <= ci_upper
+            self.assertLessEqual(s["ci_lower"], s["ci_upper"])
+
+        # Callouts verification
+        self.assertIn("callouts", data)
+        self.assertIn("headline", data["callouts"])
+        self.assertIn("skill_vs_best_pct", data["callouts"])
+        self.assertIn("skill_vs_equal_pct", data["callouts"])
+
+        # Win/Loss matrix verification (asserting authentic non-wins)
+        self.assertIn("win_loss", data)
+        self.assertGreater(data["win_loss"]["blend_wins"], 0)
+        self.assertGreater(data["win_loss"]["single_model_wins"], 0)
+        self.assertEqual(data["win_loss"]["total_scenarios"], 30)
+
+        # Test metric query parameter
+        res_corr = self.client.get("/api/skill?var=rainfall&lead=3&metric=corr")
+        self.assertEqual(res_corr.status_code, 200)
+        data_corr = res_corr.json()
+        self.assertEqual(data_corr["metric"], "corr")
 
     # 9. /api/skill/taylor
     def test_09_skill_taylor(self):

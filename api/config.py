@@ -93,6 +93,17 @@ SOURCES: Dict[str, Dict[str, Any]] = {
         "organization": "MoES / NCMRWF",
         "resolution": "0.12 deg (~12 km blended)",
         "physics_type": "Regime-Conditioned PINN Blended"
+    },
+    "equal_weight": {
+        "id": "equal_weight",
+        "name": "Equal-Weight (1/K)",
+        "full_name": "Equal-Weight Multi-Model Baseline (1/7)",
+        "type": "Baseline",
+        "color": "#94A3B8",
+        "badge": "Unweighted 1/K Baseline",
+        "organization": "Baseline Evaluation",
+        "resolution": "0.25 deg",
+        "physics_type": "Unweighted Arithmetic Ensemble Mean"
     }
 }
 

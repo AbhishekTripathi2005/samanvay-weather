@@ -230,13 +230,67 @@ export interface VerificationMetrics {
   sedi: number;
 }
 
+export type VerificationMetricKey =
+  | "rmse"
+  | "mae"
+  | "bias"
+  | "corr"
+  | "crps"
+  | "pod"
+  | "far"
+  | "csi"
+  | "ets"
+  | "sedi";
+
 export interface ScorecardItem {
   id: string;
   name: string;
-  type: SourceType;
+  type: SourceType | "Baseline";
   color: string;
   badge: string;
+  metric_value?: number;
+  ci_lower?: number;
+  ci_upper?: number;
+  skill_improvement_pct?: number;
   metrics: VerificationMetrics;
+}
+
+export interface SkillCallouts {
+  headline: string;
+  best_single_model: string;
+  best_single_id: string;
+  best_single_score: number;
+  blend_score: number;
+  skill_vs_best_pct: number;
+  skill_ci_lower: number;
+  skill_ci_upper: number;
+  skill_vs_equal_pct: number;
+  p_value: string;
+  honest_nuance: string;
+}
+
+export interface WinLossCell {
+  lead_day: number;
+  lead_hours: number;
+  regime: string;
+  winner_id: string;
+  winner_name: string;
+  winner_color: string;
+  winner_type: string;
+  is_blend_win: boolean;
+  margin_pct: number;
+  reason: string;
+}
+
+export interface WinLossData {
+  total_scenarios: number;
+  blend_wins: number;
+  single_model_wins: number;
+  blend_win_rate_pct: number;
+  single_model_win_rate_pct: number;
+  regimes: string[];
+  leads: number[];
+  matrix: WinLossCell[];
 }
 
 export interface SkillScorecardResponse {
@@ -244,7 +298,13 @@ export interface SkillScorecardResponse {
   lead_day: number;
   lead_hours: number;
   threshold: number;
+  metric?: string;
+  season?: string;
+  region?: string;
+  regime?: string;
   scorecard: ScorecardItem[];
+  callouts?: SkillCallouts;
+  win_loss?: WinLossData;
 }
 
 export interface TaylorModelItem {

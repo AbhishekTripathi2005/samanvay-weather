@@ -151,9 +151,12 @@ export function useSkillQuery(params: {
   variable: string;
   lead: number;
   metric?: string;
+  season?: string;
+  region?: string;
+  regime?: string;
 }) {
   return useQuery({
-    queryKey: queryKeys.skill(params.variable, params.lead, params.metric),
+    queryKey: [...queryKeys.skill(params.variable, params.lead, params.metric), params.season, params.region, params.regime],
     queryFn: () => api.fetchSkill(params),
     staleTime: STALE_TIME
   });

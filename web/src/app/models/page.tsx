@@ -1,102 +1,182 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { useSkillQuery, useTaylorQuery } from "@/lib/queries";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { TaylorDiagram } from "@/components/charts/TaylorDiagram";
-import { CheckCircle2, ShieldAlert } from "lucide-react";
+import { useSkillQuery, useTaylorQuery, useReliabilityQuery, useByLeadQuery } from "@/lib/queries";
+import { VerificationMetricKey } from "@/lib/types";
+import { VerificationFilters, METRIC_DEFINITIONS } from "@/components/verification/VerificationFilters";
+import { VerificationCallouts } from "@/components/verification/VerificationCallouts";
+import { LeaderboardChart } from "@/components/verification/LeaderboardChart";
+import { InteractiveTaylorDiagram } from "@/components/verification/InteractiveTaylorDiagram";
+import { ReliabilityDiagram } from "@/components/verification/ReliabilityDiagram";
+import { SkillVsLeadChart } from "@/components/verification/SkillVsLeadChart";
+import { WinLossMatrix } from "@/components/verification/WinLossMatrix";
+import { ScorecardTable } from "@/components/verification/ScorecardTable";
+import { ShieldCheck, Sparkles, RefreshCw } from "lucide-react";
 
-export default function ModelMatrixPage() {
-  const { variable, lead } = useAppStore();
-  const { data: skillData } = useSkillQuery({ variable, lead });
-  const { data: taylorData } = useTaylorQuery({ variable, lead });
+export default function VerificationPage() {
+  const { variable, setVariable, lead, setLead } = useAppStore();
 
-  const scorecard = skillData?.scorecard || [];
+  const [selectedMetric, setSelectedMetric] = useState<VerificationMetricKey>("rmse");
+  const [season, setSeason] = useState("all");
+  const [region, setRegion] = useState("all");
+  const [regime, setRegime] = useState("all");
+
+  const leadDay = Math.max(1, Math.min(10, Math.round(lead / 24) || 3));
+
+  // Queries
+  const { data: skillData, isLoading: isSkillLoading, refetch: refetchSkill } = useSkillQuery({
+    variable,
+    lead: leadDay * 24,
+    metric: selectedMetric,
+    season,
+    region,
+    regime
+  });
+
+  const { data: taylorData } = useTaylorQuery({
+    variable,
+    lead: leadDay * 24
+  });
+
+  const threshold = variable === "rainfall" ? 64.5 : variable === "tmax" ? 40.0 : 45.0;
+  const { data: reliabilityData } = useReliabilityQuery({
+    variable,
+    threshold,
+    lead: leadDay * 24
+  });
+
+  const { data: byLeadData } = useByLeadQuery({
+    variable,
+    metric: selectedMetric
+  });
+
+  const currentMetricDef = METRIC_DEFINITIONS.find((m) => m.key === selectedMetric) || METRIC_DEFINITIONS[0];
+
+  const handleSelectLeadDay = (d: number) => {
+    setLead(d * 24);
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-1 tracking-tight">Model Matrix & Verification</h1>
-        <p className="text-xs text-text-3">
-          Comprehensive 10-Metric Scorecard (RMSE, MAE, Corr, ETS, SEDI) across 7 Operational Models + Consensus
-        </p>
+    <div className="flex flex-col gap-6 pb-12 max-w-[1600px] mx-auto w-full">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-text-1 tracking-tight flex items-center gap-2.5">
+              <span>Operational Verification & Leaderboard</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400 font-bold uppercase tracking-wider">
+                Step 8 Core
+              </span>
+            </h1>
+          </div>
+          <p className="text-xs text-text-3 mt-1">
+            PS 26081 (MoES / NCMRWF) Multi-Model Benchmark Suite: 7 Sources vs Adaptive Blended Consensus & 1/K Baseline
+          </p>
+        </div>
+
+        {/* Status Chip */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-surface-2 px-3 py-1.5 rounded-lg border border-border text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-text-2">3-Year Ground Truth Climatology Active</span>
+          </div>
+
+          <button
+            onClick={() => refetchSkill()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-2 border border-border hover:border-cyan-400 text-xs font-mono text-text-2 hover:text-cyan-300 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Recalculate</span>
+          </button>
+        </div>
       </div>
 
-      {/* Dual Benchmark Banner Callout */}
-      <GlassCard className="p-4 bg-gradient-to-r from-cyan-950/40 via-surface-1 to-indigo-950/30 border-cyan-500/40">
-        <div className="flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
-          <div className="text-xs">
-            <h4 className="font-bold text-text-1 text-sm mb-1">Dual Benchmark Verification Validated</h4>
-            <p className="text-text-2 leading-relaxed">
-              1. <strong>National Average</strong>: SAMANVAY Consensus strictly beats every individual model in RMSE and ETS on 3-year pooled verification.
-              <br />
-              2. <strong>Meteorological Slice Nuance</strong>: In Day-1 Temperature, ECMWF-IFS honestly outperforms the blend (0.38°C vs 0.49°C RMSE), confirming real operational integrity.
-            </p>
-          </div>
-        </div>
-      </GlassCard>
+      {/* 1. Filter Bar & Metric Selector */}
+      <VerificationFilters
+        selectedMetric={selectedMetric}
+        onSelectMetric={setSelectedMetric}
+        variable={variable}
+        onSelectVariable={setVariable}
+        leadDay={leadDay}
+        onSelectLeadDay={handleSelectLeadDay}
+        season={season}
+        onSelectSeason={setSeason}
+        region={region}
+        onSelectRegion={setRegion}
+        regime={regime}
+        onSelectRegime={setRegime}
+      />
 
+      {/* 2. Operational Callout KPI Cards */}
+      <VerificationCallouts
+        callouts={skillData?.callouts}
+        metricLabel={currentMetricDef.label}
+        variable={variable}
+      />
+
+      {/* 3. Core 2-Column: Leaderboard Chart + Interactive Taylor Diagram */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Scorecard Table (8 cols) */}
-        <div className="lg:col-span-8">
-          <GlassCard className="p-4 flex flex-col">
-            <div className="mb-3">
-              <h3 className="text-sm font-semibold text-text-1">Skill Scorecard (Lead Day {lead / 24})</h3>
-              <p className="text-xs text-text-3">Evaluated against IMD 3-Year Climatological Ground Truth</p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-border/60 text-text-3 font-medium">
-                    <th className="py-2.5 px-3">Model</th>
-                    <th className="py-2.5 px-2">Type</th>
-                    <th className="py-2.5 px-2 text-right">RMSE</th>
-                    <th className="py-2.5 px-2 text-right">MAE</th>
-                    <th className="py-2.5 px-2 text-right">Corr (r)</th>
-                    <th className="py-2.5 px-2 text-right">ETS</th>
-                    <th className="py-2.5 px-2 text-right">SEDI</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scorecard.map((item) => {
-                    const isBlend = item.id === "samanvay";
-                    return (
-                      <tr
-                        key={item.id}
-                        className={`border-b border-border/20 transition-colors ${
-                          isBlend ? "bg-cyan-500/10 font-semibold" : "hover:bg-surface-2/40"
-                        }`}
-                      >
-                        <td className="py-2.5 px-3 flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className={isBlend ? "text-cyan-400 font-bold" : "text-text-1"}>{item.name}</span>
-                        </td>
-                        <td className="py-2.5 px-2 text-text-3">{item.type}</td>
-                        <td className="py-2.5 px-2 text-right font-mono text-text-1">{item.metrics.rmse.toFixed(2)}</td>
-                        <td className="py-2.5 px-2 text-right font-mono text-text-2">{item.metrics.mae.toFixed(2)}</td>
-                        <td className="py-2.5 px-2 text-right font-mono text-cyan-400">{item.metrics.corr.toFixed(3)}</td>
-                        <td className="py-2.5 px-2 text-right font-mono text-text-1">{item.metrics.ets.toFixed(3)}</td>
-                        <td className="py-2.5 px-2 text-right font-mono text-text-1">{item.metrics.sedi.toFixed(3)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
+        {/* Left Column: Animated Leaderboard with CI Whiskers */}
+        <div className="lg:col-span-7">
+          <LeaderboardChart
+            scorecard={skillData?.scorecard || []}
+            metricLabel={currentMetricDef.label}
+            metricName={currentMetricDef.name}
+            unit={currentMetricDef.unit}
+            better={currentMetricDef.better}
+          />
         </div>
 
-        {/* Taylor Diagram (4 cols) */}
-        <div className="lg:col-span-4">
-          <TaylorDiagram
-            referenceStd={taylorData?.reference.std_dev || 12.5}
+        {/* Right Column: Interactive Taylor Diagram */}
+        <div className="lg:col-span-5">
+          <InteractiveTaylorDiagram
             models={taylorData?.models || []}
+            referenceStd={taylorData?.reference?.std_dev}
+            leadLabel={`Day ${leadDay}`}
+            variable={variable}
           />
         </div>
       </div>
+
+      {/* 4. Second Row: Reliability Calibration Diagram + Skill vs Lead Horizon Trajectory */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Reliability Curve & Histogram */}
+        <div className="lg:col-span-6">
+          <ReliabilityDiagram
+            bins={reliabilityData?.bins || []}
+            brierScoreRaw={reliabilityData?.brier_score_raw}
+            brierScoreCalibrated={reliabilityData?.brier_score_calibrated}
+            brierSkillScorePct={reliabilityData?.brier_skill_score_pct}
+            variable={variable}
+            leadLabel={`Day ${leadDay}`}
+            threshold={threshold}
+          />
+        </div>
+
+        {/* Skill vs Lead Trajectory Lines */}
+        <div className="lg:col-span-6">
+          <SkillVsLeadChart
+            curves={byLeadData?.curves || []}
+            variable={variable}
+            metric={selectedMetric}
+            onSelectMetric={(m) => setSelectedMetric(m as VerificationMetricKey)}
+          />
+        </div>
+      </div>
+
+      {/* 5. Third Row: Honest Win / Loss Matrix */}
+      <WinLossMatrix
+        data={skillData?.win_loss}
+        variable={variable}
+      />
+
+      {/* 6. Fourth Row: Complete 10-Metric Scorecard Table & CSV Export */}
+      <ScorecardTable
+        scorecard={skillData?.scorecard || []}
+        variable={variable}
+        leadDay={leadDay}
+      />
     </div>
   );
 }

@@ -128,11 +128,17 @@ export async function fetchSkill(params: {
   variable?: string;
   lead?: number;
   metric?: string;
+  season?: string;
+  region?: string;
+  regime?: string;
 }): Promise<SkillScorecardResponse> {
   const qs = new URLSearchParams();
   if (params.variable) qs.set("var", params.variable);
   if (params.lead !== undefined) qs.set("lead", params.lead.toString());
   if (params.metric) qs.set("metric", params.metric);
+  if (params.season) qs.set("season", params.season);
+  if (params.region) qs.set("region", params.region);
+  if (params.regime) qs.set("regime", params.regime);
   return request<SkillScorecardResponse>(`/skill?${qs.toString()}`);
 }
 
