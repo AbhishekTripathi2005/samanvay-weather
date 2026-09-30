@@ -32,7 +32,9 @@ import {
   CustomBlendResponse,
   OpsRunResponse,
   PlumeResponse,
-  WeightsMapResponse
+  WeightsMapResponse,
+  OpsProductsResponse,
+  OpsHealthResponse
 } from "./types";
 
 
@@ -65,6 +67,8 @@ export const queryKeys = {
   shimlaImpact: (r?: number, a?: number) => ["shimlaImpact", r ?? 85, a ?? 142] as const,
   opsPipeline: ["opsPipeline"] as const,
   opsHistory: (limit: number) => ["opsHistory", limit] as const,
+  opsProducts: ["opsProducts"] as const,
+  opsHealth: ["opsHealth"] as const,
   forecastPlume: (r?: string, v?: string, d?: string, reg?: string, m?: string, hl?: number, t?: number) =>
     ["forecastPlume", r || "DL", v || "rainfall", d || "today", reg || "auto", m || "stacked_nnls", hl ?? 14, t ?? 1.0] as const,
   weightsMap: (v?: string, l?: number, s?: string, reg?: string, m?: string) =>
@@ -292,7 +296,7 @@ export function useOpsHistoryQuery(limit: number = 30) {
 export function useOpsRunMutation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: api.postOpsRun,
+    mutationFn: (simulate_fail?: boolean) => api.postOpsRun(simulate_fail ?? false),
     onSuccess: (data) => {
       toast.success(`Operational run initiated: ${data.run_id}`);
       qc.invalidateQueries({ queryKey: queryKeys.opsHistory(30) });
@@ -301,6 +305,23 @@ export function useOpsRunMutation() {
     onError: (err: any) => {
       toast.error(`Pipeline run trigger failed: ${err.message}`);
     }
+  });
+}
+
+export function useOpsProductsQuery() {
+  return useQuery<OpsProductsResponse>({
+    queryKey: queryKeys.opsProducts,
+    queryFn: api.fetchOpsProducts,
+    staleTime: 60 * 1000
+  });
+}
+
+export function useOpsHealthQuery() {
+  return useQuery<OpsHealthResponse>({
+    queryKey: queryKeys.opsHealth,
+    queryFn: api.fetchOpsHealth,
+    staleTime: 15 * 1000,
+    refetchInterval: 30 * 1000
   });
 }
 

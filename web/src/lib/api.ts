@@ -37,7 +37,9 @@ import {
   PlumeResponse,
   WeightsMapResponse,
   WaterBalanceResponse,
-  LandslideDemResponse
+  LandslideDemResponse,
+  OpsProductsResponse,
+  OpsHealthResponse
 } from "./types";
 
 
@@ -234,8 +236,17 @@ export async function fetchOpsHistory(limit: number = 30): Promise<OpsHistoryRes
 }
 
 // 20. Trigger Ops Run (POST)
-export async function postOpsRun(): Promise<OpsRunResponse> {
-  return request<OpsRunResponse>("/ops/run", { method: "POST" });
+export async function postOpsRun(simulate_fail: boolean = false): Promise<OpsRunResponse> {
+  const qs = simulate_fail ? "?simulate_fail=true" : "";
+  return request<OpsRunResponse>(`/ops/run${qs}`, { method: "POST" });
+}
+
+export async function fetchOpsProducts(): Promise<OpsProductsResponse> {
+  return request<OpsProductsResponse>("/ops/products");
+}
+
+export async function fetchOpsHealth(): Promise<OpsHealthResponse> {
+  return request<OpsHealthResponse>("/ops/health");
 }
 
 // Legacy helpers

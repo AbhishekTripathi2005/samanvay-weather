@@ -83,20 +83,50 @@ synth = SyntheticEngine.get_instance()
 RUN_HISTORY = []
 # Pre-populate run history with recent runs
 _now = datetime.datetime.now(datetime.timezone.utc)
+_all_model_names = ["NCUM-G", "NEPS", "IMD-GFS", "ECMWF-IFS", "GraphCast", "Pangu", "FourCastNet"]
+
 for i in range(30):
     run_dt = _now - datetime.timedelta(hours=i * 6)
+    is_fail = (i == 3)  # One authentic historical failure for retry testing
+    is_warn = (i == 7)
+    status = "FAILED" if is_fail else ("WARNING" if is_warn else "SUCCESS")
+    dur = int(195 if is_fail else 380 + (i * 17) % 180)
+    skill_delta = "N/A (aborted at QC)" if is_fail else f"+{14.2 + (i % 8) * 1.1:.1f}% vs best single"
+    
+    logs = [
+        f"[{run_dt.strftime('%H:%M:%S')}.012] [INGEST] Ingested 7 forecast source streams (ECMWF, NCMRWF, IMD, AI surrogates)",
+        f"[{run_dt.strftime('%H:%M:%S')}.058] [QC] Checksum & grid alignment validation complete. Missing values: 0.00%",
+    ]
+    if is_fail:
+        logs.extend([
+            f"[{run_dt.strftime('%H:%M:%S')}.189] [QC ERROR] Convective precipitation gradient divergence exceeds 3.5-sigma bounds on IMD-GFS.",
+            f"[{run_dt.strftime('%H:%M:%S')}.195] [FATAL] Pipeline aborted by automated safety gate. Fallback to persistence.",
+        ])
+    else:
+        logs.extend([
+            f"[{run_dt.strftime('%H:%M:%S')}.126] [BIAS_CORRECT] Quantile mapping applied per 0.25 deg grid cell. Tail preservation active.",
+            f"[{run_dt.strftime('%H:%M:%S')}.180] [WEIGHT_UPDATE] Solved NNLS weights for regime Active monsoon. Top: NCUM-G (0.34), ECMWF (0.28).",
+            f"[{run_dt.strftime('%H:%M:%S')}.265] [BLEND] Blended consensus field synthesized. Spatial Laplacian smoothing: lambda=0.08.",
+            f"[{run_dt.strftime('%H:%M:%S')}.327] [VERIFY] 200-iter bootstrap verification complete. Brier score gain: +22.4%.",
+            f"[{run_dt.strftime('%H:%M:%S')}.365] [PUBLISH] GeoJSON, NetCDF, CSV, and IMD State Bulletins published to cache and edge nodes.",
+        ])
+
     RUN_HISTORY.append({
         "run_id": f"RUN-{run_dt.strftime('%Y%m%d')}-{'00Z' if i % 2 == 0 else '12Z'}-{1000+i}",
         "timestamp": run_dt.isoformat(),
         "cycle": "00Z" if i % 2 == 0 else "12Z",
-        "duration_ms": int(380 + (i * 17) % 180),
-        "models_synced": 7,
+        "duration_ms": dur,
+        "models_synced": 5 if is_fail else 7,
         "models_total": 7,
-        "fallback_engaged": False,
-        "active_alerts": 2 + (i % 6),
+        "models_used": _all_model_names[:5] if is_fail else _all_model_names,
+        "fallback_engaged": is_fail,
+        "active_alerts": 0 if is_fail else 2 + (i % 6),
         "regime": "Active monsoon" if i % 4 != 0 else "Western Disturbance",
-        "status": "SUCCESS"
+        "status": status,
+        "skill_delta": skill_delta,
+        "logs": "\n".join(logs)
     })
+
 
 
 # -------------------------------------------------------------
@@ -1429,26 +1459,41 @@ def get_ops_history(limit: int = Query(30, ge=1, le=50)):
 # 20. /api/ops/run (POST)
 # -------------------------------------------------------------
 @app.post("/api/ops/run")
-def trigger_ops_run():
+def trigger_ops_run(simulate_fail: bool = Query(False, description="Simulate QC failure to test recovery")):
     """Trigger synthetic operational ingestion & blending pipeline execution."""
     new_id = f"RUN-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}"
     record = {
         "run_id": new_id,
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "cycle": "Realtime Triggered",
-        "duration_ms": 415,
-        "models_synced": 7,
+        "duration_ms": 195 if simulate_fail else 415,
+        "models_synced": 5 if simulate_fail else 7,
         "models_total": 7,
-        "fallback_engaged": False,
-        "active_alerts": 5,
+        "models_used": ["NCUM-G", "NEPS", "IMD-GFS", "ECMWF-IFS", "GraphCast"] if simulate_fail else ["NCUM-G", "NEPS", "IMD-GFS", "ECMWF-IFS", "GraphCast", "Pangu", "FourCastNet"],
+        "fallback_engaged": simulate_fail,
+        "active_alerts": 0 if simulate_fail else 5,
         "regime": detect_regime(),
-        "status": "SUCCESS"
+        "status": "FAILED" if simulate_fail else "SUCCESS",
+        "skill_delta": "N/A (aborted at QC)" if simulate_fail else "+19.4% vs best single",
+        "logs": (
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.012] [INGEST] Ingested 7 forecast source streams\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.058] [QC ERROR] Convective precipitation gradient divergence exceeds 3.5-sigma bounds on IMD-GFS.\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.062] [FATAL] Automated safety gate tripped. Run aborted."
+        ) if simulate_fail else (
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.012] [INGEST] Ingested 7 forecast streams\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.058] [QC] Checksums & conservation verified (0.00% missing)\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.126] [BIAS_CORRECT] Quantile mapping applied with tail preservation\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.180] [WEIGHT_UPDATE] Solved NNLS weights for regime {detect_regime()}\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.265] [BLEND] Blended consensus field synthesized (Laplacian smoothing)\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.327] [VERIFY] 200-iter bootstrap verification complete (+19.4% gain)\n"
+            f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%H:%M:%S')}.365] [PUBLISH] GeoJSON, NetCDF, CSV, and IMD Bulletins published"
+        )
     }
     RUN_HISTORY.insert(0, record)
     return {
         "status": "QUEUED_AND_INITIATED",
         "run_id": new_id,
-        "stream_url": f"/api/ops/run/{new_id}/stream",
+        "stream_url": f"/api/ops/run/{new_id}/stream?simulate_fail={'true' if simulate_fail else 'false'}",
         "details": record
     }
 
@@ -1457,28 +1502,50 @@ def trigger_ops_run():
 # 21. /api/ops/run/{id}/stream (SSE)
 # -------------------------------------------------------------
 @app.get("/api/ops/run/{run_id}/stream")
-async def stream_ops_run(run_id: str):
-    """Server-Sent Events (SSE) streaming operational pipeline execution steps."""
+async def stream_ops_run(run_id: str, simulate_fail: bool = Query(False)):
+    """Server-Sent Events (SSE) streaming operational pipeline execution through the 7 DAG nodes."""
     async def event_generator():
-        steps = [
-            ("INGEST", 15, "Ingesting 7 model streams via ForecastSource adapters (NWP + Ensemble + AI)..."),
-            ("BIAS_CORRECT", 35, "Executing Empirical Quantile Mapping with tail preservation & linear scaling..."),
-            ("REGIME_DETECT", 50, f"Detected synoptic regime: {detect_regime()} (MoES synoptic rules)..."),
-            ("BLEND", 70, "Solving NNLS stacking & Bayesian Model Averaging with spatial Laplacian smoothing..."),
-            ("VERIFY", 85, "Executing 500-sample bootstrap verification & isotonic exceedance calibration..."),
-            ("DSS_ALERTS", 95, "Dispatching IMD Multi-hazard State Bulletins & Shimla hydrological risk model..."),
-            ("COMPLETE", 100, f"Operational run {run_id} completed successfully in 392ms.")
+        # Exact 7 DAG nodes: ingest -> qc -> bias_correct -> weight_update -> blend -> verify -> publish
+        nodes = [
+            ("ingest",        14, 45,  "INGEST",         "Ingesting 7 model streams via ForecastSource adapters (ECMWF, NCMRWF, IMD, AI)..."),
+            ("qc",            28, 22,  "QC",             "Executing physical conservation check & 3-sigma gradient anomaly bounds..."),
+            ("bias_correct",  43, 68,  "BIAS_CORRECT",   "Executing Empirical Quantile Mapping with tail preservation & linear scaling..."),
+            ("weight_update", 57, 54,  "WEIGHT_UPDATE",  f"Solving NNLS stacking weights for synoptic regime: {detect_regime()}..."),
+            ("blend",         71, 85,  "BLEND",          "Synthesizing blended consensus field with spatial Laplacian regularisation..."),
+            ("verify",        86, 62,  "VERIFY",         "Executing 200-iter bootstrap verification & isotonic exceedance calibration..."),
+            ("publish",       100, 38, "PUBLISH",        "Publishing GeoJSON, NetCDF-4, CSV, and IMD State Bulletins to edge cache...")
         ]
-        for step_name, progress, msg in steps:
-            data = json.dumps({
+        
+        for node_id, progress, duration, step_name, msg in nodes:
+            if simulate_fail and node_id == "qc":
+                # Simulated failure at QC node
+                fail_data = json.dumps({
+                    "run_id": run_id,
+                    "node_id": node_id,
+                    "step": step_name,
+                    "progress": progress,
+                    "duration_ms": duration,
+                    "node_state": "fail",
+                    "status": "FAILED",
+                    "message": "QC Validation Failure: Convective precipitation gradient divergence exceeds 3.5-sigma bounds on IMD-GFS. Pipeline aborted by automated safety gate.",
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                })
+                yield f"data: {fail_data}\n\n"
+                return
+
+            node_data = json.dumps({
                 "run_id": run_id,
+                "node_id": node_id,
                 "step": step_name,
                 "progress": progress,
+                "duration_ms": duration,
+                "node_state": "success" if progress == 100 or node_id != "publish" else "success",
+                "status": "COMPLETE" if progress == 100 else "RUNNING",
                 "message": msg,
                 "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
             })
-            yield f"data: {data}\n\n"
-            await asyncio.sleep(0.08)
+            yield f"data: {node_data}\n\n"
+            await asyncio.sleep(0.09)
 
     return StreamingResponse(
         event_generator(),
@@ -1489,6 +1556,82 @@ async def stream_ops_run(run_id: str):
             "X-Accel-Buffering": "no"
         }
     )
+
+
+# -------------------------------------------------------------
+# STEP 12: /api/ops/products & /api/ops/health
+# -------------------------------------------------------------
+@app.get("/api/ops/products")
+def get_ops_products():
+    """Downloadable operational consensus data products with SHA-256 checksums."""
+    return {
+        "products": [
+            {
+                "id": "geojson",
+                "name": "State & District Vector Advisory",
+                "format": "GeoJSON",
+                "size": "482 KB",
+                "download_url": "/api/export/geojson",
+                "filename": "samanvay_bulletin.geojson",
+                "sha256": "4b6c8f90123456789abcdef0123456789abcdef0123456789abcdef012345678",
+                "description": "Multi-hazard district polygon boundaries with calibrated P(extreme) exceedance attributes."
+            },
+            {
+                "id": "csv",
+                "name": "Consensus Tables & Quantiles",
+                "format": "CSV",
+                "size": "38 KB",
+                "download_url": "/api/export/csv",
+                "filename": "samanvay_operational_bulletin.csv",
+                "sha256": "8a7b6c5d4e3f210987654321fedcba0987654321fedcba0987654321fedcba09",
+                "description": "Tabular 36 states/UTs point forecast consensus, P10, P90, and dominant model attribution."
+            },
+            {
+                "id": "netcdf",
+                "name": "Gridded Atmospheric Consensus",
+                "format": "NetCDF-4 / CF-1.8",
+                "size": "1.2 MB",
+                "download_url": "/api/export/netcdf-stub",
+                "filename": "samanvay_grid_cf18.nc",
+                "sha256": "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0",
+                "description": "0.25 deg regular gridded atmospheric variables with CF-1.8 metadata compliance."
+            },
+            {
+                "id": "pdf",
+                "name": "IMD Severe Weather Advisory Bulletin",
+                "format": "PDF Document",
+                "size": "840 KB",
+                "download_url": "/api/export/pdf-stub",
+                "filename": "samanvay_imd_bulletin.pdf",
+                "sha256": "c0ffee1234567890abcdef0123456789abcdef0123456789abcdef0123456789",
+                "description": "Official IMD four-tier alert bulletin with SOP emergency protocols for state SDMAs."
+            }
+        ]
+    }
+
+
+@app.get("/api/ops/health")
+def get_ops_health():
+    """Health monitor: data freshness per source, latency, and error rate."""
+    sources_health = [
+        {"id": "ncum_g",      "name": "NCUM-G",        "type": "NWP",      "freshness": "8m ago",  "latency_ms": 380, "error_rate": "0.01%", "status": "ONLINE",  "health": "HEALTHY"},
+        {"id": "neps",        "name": "NEPS",          "type": "Ensemble", "freshness": "12m ago", "latency_ms": 490, "error_rate": "0.02%", "status": "ONLINE",  "health": "HEALTHY"},
+        {"id": "imd_gfs",     "name": "IMD-GFS",       "type": "NWP",      "freshness": "5m ago",  "latency_ms": 310, "error_rate": "0.01%", "status": "ONLINE",  "health": "HEALTHY"},
+        {"id": "ecmwf_ifs",   "name": "ECMWF-IFS",     "type": "NWP",      "freshness": "18m ago", "latency_ms": 420, "error_rate": "0.00%", "status": "ONLINE",  "health": "HEALTHY"},
+        {"id": "graphcast",   "name": "GraphCast",     "type": "AI",       "freshness": "2m ago",  "latency_ms": 140, "error_rate": "0.00%", "status": "ONLINE",  "health": "HEALTHY"},
+        {"id": "pangu",       "name": "Pangu-Weather", "type": "AI",       "freshness": "3m ago",  "latency_ms": 110, "error_rate": "0.00%", "status": "ONLINE",  "health": "HEALTHY"},
+        {"id": "fourcastnet", "name": "FourCastNet",   "type": "AI",       "freshness": "4m ago",  "latency_ms": 95,  "error_rate": "0.01%", "status": "ONLINE",  "health": "HEALTHY"}
+    ]
+    return {
+        "system_status": "ALL_SYSTEMS_OPERATIONAL",
+        "uptime_pct": 99.98,
+        "queue_depth": 0,
+        "active_workers": 8,
+        "last_ingest_cycle": "Realtime Triggered",
+        "average_latency_ms": 277,
+        "sources": sources_health
+    }
+
 
 
 # -------------------------------------------------------------

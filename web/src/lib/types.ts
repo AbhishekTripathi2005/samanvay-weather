@@ -594,10 +594,13 @@ export interface OpsRunRecord {
   duration_ms: number;
   models_synced: number;
   models_total: number;
+  models_used?: string[];
   fallback_engaged: boolean;
   active_alerts: number;
   regime: string;
-  status: string;
+  status: "SUCCESS" | "FAILED" | "WARNING" | string;
+  skill_delta?: string;
+  logs?: string;
 }
 
 export interface OpsHistoryResponse {
@@ -613,14 +616,56 @@ export interface OpsRunResponse {
   details: OpsRunRecord;
 }
 
+export type DagNodeId = "ingest" | "qc" | "bias_correct" | "weight_update" | "blend" | "verify" | "publish";
+export type DagNodeState = "idle" | "running" | "success" | "warn" | "fail";
+
 export interface OpsStreamEvent {
   run_id: string;
-  step: "INGEST" | "BIAS_CORRECT" | "REGIME_DETECT" | "BLEND" | "VERIFY" | "DSS_ALERTS" | "COMPLETE";
+  node_id?: DagNodeId;
+  step: string;
   progress: number;
+  duration_ms?: number;
+  node_state?: DagNodeState;
+  status?: string;
   message: string;
   timestamp: string;
 }
 
+export interface OpsProduct {
+  id: string;
+  name: string;
+  format: string;
+  size: string;
+  download_url: string;
+  filename: string;
+  sha256: string;
+  description: string;
+}
+
+export interface OpsProductsResponse {
+  products: OpsProduct[];
+}
+
+export interface OpsHealthSource {
+  id: string;
+  name: string;
+  type: string;
+  freshness: string;
+  latency_ms: number;
+  error_rate: string;
+  status: string;
+  health: string;
+}
+
+export interface OpsHealthResponse {
+  system_status: string;
+  uptime_pct: number;
+  queue_depth: number;
+  active_workers: number;
+  last_ingest_cycle: string;
+  average_latency_ms: number;
+  sources: OpsHealthSource[];
+}
 // Legacy types retained for backwards compatibility
 export interface StateRisk {
   code: string;
