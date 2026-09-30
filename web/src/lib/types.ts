@@ -370,19 +370,94 @@ export interface ExtremeAlertItem {
   p90: number;
   p_extreme: number;
   alert_level: AlertLevel;
+  alert_day?: number;
+  confidence?: number;
   leading_model: string;
+  top_models?: Array<{ id: string; name: string; weight: number }>;
   population_exposed_thousands: number;
   recommended_action: string;
 }
 
 export interface ExtremesResponse {
   timestamp: string;
+  variable_filter?: string;
   total_active_alerts: number;
   red_count: number;
   orange_count: number;
   yellow_count: number;
   alerts: ExtremeAlertItem[];
 }
+
+// Step 9: 10-day alert timeline per district
+export interface ExtremesTimelineDay {
+  day: number;
+  date: string;
+  date_label: string;
+  p_extreme: number;
+  alert_level: AlertLevel;
+  forecast_value: number;
+}
+export interface ExtremesTimelineResponse {
+  district: string;
+  days: ExtremesTimelineDay[];
+}
+
+// Step 9: ROC curve data
+export interface RocPoint { fpr: number; tpr: number; threshold: number; }
+export interface RocCurve {
+  id: string; name: string; color: string; auc: number;
+  points: RocPoint[];
+}
+export interface RocResponse {
+  variable: string; threshold: number; sample_size: number;
+  curves: RocCurve[];
+}
+
+// Step 9: Performance diagram (POD vs success ratio)
+export interface PerfPoint {
+  id: string; name: string; color: string; type: SourceType;
+  pod: number; success_ratio: number; is_blend: boolean;
+}
+export interface PerfThreshold { threshold: number; label: string; models: PerfPoint[]; }
+export interface PerfDiagramResponse { variable: string; thresholds: PerfThreshold[]; }
+
+// Step 9: 90-day event timeline
+export type EventOutcome = "hit" | "miss" | "false_alarm" | "correct_null";
+export interface EventTimelineItem {
+  date: string; date_label: string;
+  observed: number; forecast: number; outcome: EventOutcome;
+}
+export interface EventTimelineResponse {
+  variable: string; threshold: number; sample_days: number;
+  hits: number; misses: number; false_alarms: number;
+  pod: number; far: number;
+  events: EventTimelineItem[];
+}
+
+// Step 9: Enhanced explain v2
+export interface ModelContribution {
+  id: string; name: string; color: string; type: SourceType;
+  weight: number; raw_forecast: number; bias_corrected: number;
+  contribution_pct: number;
+}
+export interface EnsembleSpread {
+  min: number; p10: number; p25: number; p50: number;
+  p75: number; p90: number; max: number; threshold: number;
+}
+export interface ThresholdCrossingPoint { lead_day: number; p_exceed: number; }
+export interface ExtremesExplainV2Response {
+  district: string; state: string;
+  calibrated_exceedance_probability: number;
+  alert_level: AlertLevel;
+  blend_value_mm: number;
+  features: Array<{ feature: string; attribution: number; type: string }>;
+  waterfall: ExplainWaterfallStep[];
+  model_contributions: ModelContribution[];
+  ensemble_spread: EnsembleSpread;
+  threshold_crossing: ThresholdCrossingPoint[];
+  bias_correction_note: string;
+}
+
 
 export interface ExtremesVerificationThreshold {
   name: string;

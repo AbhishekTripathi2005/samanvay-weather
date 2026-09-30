@@ -1802,3 +1802,450 @@ def get_map_grid(
         "max_value": float(np.max(grid_vals)),
         "mean_value": round(float(np.mean(grid_vals)), 2)
     }
+
+
+# =============================================================
+# STEP 9 — EXTREME WEATHER GUIDANCE (new endpoints)
+# =============================================================
+
+# S9-1. Enhanced /api/extremes with var filter + confidence + top_models
+# (Replaces the earlier simple endpoint — we add a new path with var param)
+@app.get("/api/extremes/by-variable")
+def get_extremes_by_variable(var: str = Query("rainfall")):
+    """Active alerts filtered by variable with confidence and top model contributions."""
+    ALL_DISTRICTS = [
+        {
+            "id": "HP_SHM", "district": "Shimla", "state": "Himachal Pradesh",
+            "variable": "rainfall", "threshold_value": 64.5, "forecast_value": 92.4,
+            "p10": 74.0, "p90": 118.0, "p_extreme": 0.84, "alert_level": "RED",
+            "alert_day": 2, "confidence": 0.91,
+            "leading_model": "ncum_g", "population_exposed_thousands": 814,
+            "recommended_action": "Evacuate high-slope river corridor settlements; pause heavy vehicle traffic on NH-5.",
+            "top_models": [
+                {"id": "ncum_g", "name": "NCUM-G", "weight": 0.38},
+                {"id": "neps", "name": "NEPS", "weight": 0.27},
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.19}
+            ]
+        },
+        {
+            "id": "KL_WYD", "district": "Wayanad", "state": "Kerala",
+            "variable": "rainfall", "threshold_value": 64.5, "forecast_value": 88.0,
+            "p10": 68.5, "p90": 112.5, "p_extreme": 0.79, "alert_level": "RED",
+            "alert_day": 1, "confidence": 0.87,
+            "leading_model": "neps", "population_exposed_thousands": 817,
+            "recommended_action": "High debris flow watch; activate emergency NDRF staging at Meppadi and Chooralmala.",
+            "top_models": [
+                {"id": "neps", "name": "NEPS", "weight": 0.41},
+                {"id": "ncum_g", "name": "NCUM-G", "weight": 0.29},
+                {"id": "graphcast", "name": "GraphCast", "weight": 0.17}
+            ]
+        },
+        {
+            "id": "UT_CHM", "district": "Chamoli", "state": "Uttarakhand",
+            "variable": "rainfall", "threshold_value": 64.5, "forecast_value": 76.5,
+            "p10": 58.0, "p90": 98.0, "p_extreme": 0.68, "alert_level": "ORANGE",
+            "alert_day": 3, "confidence": 0.74,
+            "leading_model": "ecmwf_ifs", "population_exposed_thousands": 391,
+            "recommended_action": "Monitor Alaknanda tributary gauges; restrict trekking above 2500m.",
+            "top_models": [
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.35},
+                {"id": "ncum_g", "name": "NCUM-G", "weight": 0.30},
+                {"id": "neps", "name": "NEPS", "weight": 0.22}
+            ]
+        },
+        {
+            "id": "MH_MUM", "district": "Mumbai City", "state": "Maharashtra",
+            "variable": "rainfall", "threshold_value": 64.5, "forecast_value": 72.0,
+            "p10": 55.0, "p90": 94.0, "p_extreme": 0.62, "alert_level": "ORANGE",
+            "alert_day": 2, "confidence": 0.69,
+            "leading_model": "graphcast", "population_exposed_thousands": 3145,
+            "recommended_action": "Position de-watering pumps at low-lying railway subways; high tide coordination.",
+            "top_models": [
+                {"id": "graphcast", "name": "GraphCast", "weight": 0.36},
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.28},
+                {"id": "ncum_g", "name": "NCUM-G", "weight": 0.21}
+            ]
+        },
+        {
+            "id": "OD_PUR", "district": "Puri", "state": "Odisha",
+            "variable": "wind_gust", "threshold_value": 75.0, "forecast_value": 84.5,
+            "p10": 70.0, "p90": 102.0, "p_extreme": 0.71, "alert_level": "ORANGE",
+            "alert_day": 1, "confidence": 0.78,
+            "leading_model": "neps", "population_exposed_thousands": 1698,
+            "recommended_action": "Coastal fishermen total advisory in effect; secure beach temporary installations.",
+            "top_models": [
+                {"id": "neps", "name": "NEPS", "weight": 0.44},
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.31},
+                {"id": "imd_gfs", "name": "IMD-GFS", "weight": 0.15}
+            ]
+        },
+        {
+            "id": "RJ_JAI", "district": "Jaipur", "state": "Rajasthan",
+            "variable": "tmax", "threshold_value": 44.0, "forecast_value": 45.2,
+            "p10": 44.0, "p90": 46.8, "p_extreme": 0.76, "alert_level": "ORANGE",
+            "alert_day": 2, "confidence": 0.82,
+            "leading_model": "pangu", "population_exposed_thousands": 3073,
+            "recommended_action": "Heat action plan level 2; restrict outdoor construction from 1100 to 1600 IST.",
+            "top_models": [
+                {"id": "pangu", "name": "Pangu-Weather", "weight": 0.39},
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.33},
+                {"id": "imd_gfs", "name": "IMD-GFS", "weight": 0.18}
+            ]
+        },
+        {
+            "id": "DL_NDL", "district": "New Delhi", "state": "Delhi (NCT)",
+            "variable": "rainfall", "threshold_value": 64.5, "forecast_value": 48.0,
+            "p10": 32.0, "p90": 68.0, "p_extreme": 0.35, "alert_level": "YELLOW",
+            "alert_day": 4, "confidence": 0.54,
+            "leading_model": "fourcastnet", "population_exposed_thousands": 250,
+            "recommended_action": "Urban drainage watch; traffic advisory for Ring Road underpasses.",
+            "top_models": [
+                {"id": "fourcastnet", "name": "FourCastNet", "weight": 0.30},
+                {"id": "ncum_g", "name": "NCUM-G", "weight": 0.28},
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.25}
+            ]
+        },
+        {
+            "id": "GJ_SRT", "district": "Surat", "state": "Gujarat",
+            "variable": "tmax", "threshold_value": 44.0, "forecast_value": 44.6,
+            "p10": 43.2, "p90": 46.1, "p_extreme": 0.58, "alert_level": "YELLOW",
+            "alert_day": 3, "confidence": 0.63,
+            "leading_model": "pangu", "population_exposed_thousands": 640,
+            "recommended_action": "Heat watch; distribute ORS at community centres, check on elderly.",
+            "top_models": [
+                {"id": "pangu", "name": "Pangu-Weather", "weight": 0.41},
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.30},
+                {"id": "imd_gfs", "name": "IMD-GFS", "weight": 0.20}
+            ]
+        },
+        {
+            "id": "AP_VZG", "district": "Visakhapatnam", "state": "Andhra Pradesh",
+            "variable": "wind_gust", "threshold_value": 75.0, "forecast_value": 79.2,
+            "p10": 65.0, "p90": 94.0, "p_extreme": 0.55, "alert_level": "YELLOW",
+            "alert_day": 2, "confidence": 0.61,
+            "leading_model": "neps", "population_exposed_thousands": 520,
+            "recommended_action": "Small-craft warning in effect; restrict fishing vessels in Bay of Bengal.",
+            "top_models": [
+                {"id": "neps", "name": "NEPS", "weight": 0.38},
+                {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "weight": 0.32},
+                {"id": "graphcast", "name": "GraphCast", "weight": 0.20}
+            ]
+        }
+    ]
+    if var and var != "all":
+        filtered = [d for d in ALL_DISTRICTS if d["variable"] == var]
+    else:
+        filtered = ALL_DISTRICTS
+    return {
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "variable_filter": var,
+        "total_active_alerts": len(filtered),
+        "red_count": sum(1 for a in filtered if a["alert_level"] == "RED"),
+        "orange_count": sum(1 for a in filtered if a["alert_level"] == "ORANGE"),
+        "yellow_count": sum(1 for a in filtered if a["alert_level"] == "YELLOW"),
+        "alerts": filtered
+    }
+
+
+# S9-2. /api/extremes/timeline — 10-day alert strip per district
+@app.get("/api/extremes/timeline")
+def get_extremes_timeline(district: str = Query("HP_SHM")):
+    """10-day alert timeline for a selected district."""
+    import datetime as dt
+    base_date = dt.date.today()
+    rng = np.random.default_rng(abs(hash(district)) % (2**31))
+
+    # Seeded per-district probability trajectory (peaks and decays)
+    base_p = 0.84 if district == "HP_SHM" else (0.79 if district == "KL_WYD" else 0.55)
+    days = []
+    p = base_p
+    for i in range(10):
+        day_date = base_date + dt.timedelta(days=i)
+        if i == 0:
+            alert = "RED" if p >= 0.75 else ("ORANGE" if p >= 0.45 else ("YELLOW" if p >= 0.25 else "GREEN"))
+        else:
+            p = max(0.05, p * (0.82 + rng.uniform(-0.05, 0.05)))
+            alert = "RED" if p >= 0.75 else ("ORANGE" if p >= 0.45 else ("YELLOW" if p >= 0.25 else "GREEN"))
+        forecast_val = round(float(base_p * 100 * (p / base_p)), 1)
+        days.append({
+            "day": i + 1,
+            "date": day_date.isoformat(),
+            "date_label": day_date.strftime("%d %b"),
+            "p_extreme": round(float(p), 3),
+            "alert_level": alert,
+            "forecast_value": max(0.0, forecast_val)
+        })
+    return {"district": district, "days": days}
+
+
+# S9-3. /api/extremes/roc — ROC curve data
+@app.get("/api/extremes/roc")
+def get_extremes_roc(
+    var: str = Query("rainfall"),
+    threshold: float = Query(64.5)
+):
+    """ROC curve (FPR vs TPR) for SAMANVAY and best single model."""
+    bench = synth.generate_benchmark_dataset(variable="rainfall", lead_day=3, n_days=500)
+    obs = bench["obs"]
+    obs_binary = (obs >= threshold).astype(int)
+    weights = BlendingEngine.compute_weights(lead=72, regime="Active monsoon", variable="rainfall")
+    corr_m = {m: bias_correct_quantile(bench["models"][m], obs) for m in MODELS_LIST}
+    blend_val = core_blend(corr_m, weights)["value"]
+
+    def roc_curve_data(scores, obs_bin, n_thresh=40):
+        thresholds = np.percentile(scores, np.linspace(0, 100, n_thresh))
+        pts = []
+        for th in sorted(thresholds, reverse=True):
+            pred = (scores >= th).astype(int)
+            tp = int(np.sum((pred == 1) & (obs_bin == 1)))
+            fp = int(np.sum((pred == 1) & (obs_bin == 0)))
+            tn = int(np.sum((pred == 0) & (obs_bin == 0)))
+            fn = int(np.sum((pred == 0) & (obs_bin == 1)))
+            tpr = tp / max(tp + fn, 1)
+            fpr = fp / max(fp + tn, 1)
+            pts.append({"fpr": round(fpr, 4), "tpr": round(tpr, 4), "threshold": round(float(th), 2)})
+        pts = sorted(pts, key=lambda x: x["fpr"])
+        # AUC via trapezoid
+        auc = float(np.trapezoid([p["tpr"] for p in pts], [p["fpr"] for p in pts]))
+        return pts, round(auc, 3)
+
+    samanvay_pts, samanvay_auc = roc_curve_data(blend_val, obs_binary)
+    # Best single = ecmwf_ifs
+    best_pts, best_auc = roc_curve_data(corr_m["ecmwf_ifs"], obs_binary)
+
+    return {
+        "variable": var,
+        "threshold": threshold,
+        "sample_size": len(obs),
+        "curves": [
+            {"id": "samanvay", "name": "SAMANVAY Consensus", "color": "#22d3ee", "auc": samanvay_auc, "points": samanvay_pts},
+            {"id": "ecmwf_ifs", "name": "ECMWF-IFS", "color": "#a78bfa", "auc": best_auc, "points": best_pts}
+        ]
+    }
+
+
+# S9-4. /api/extremes/perf — Performance diagram (POD vs success ratio)
+@app.get("/api/extremes/perf")
+def get_extremes_perf(var: str = Query("rainfall")):
+    """Performance diagram: POD vs success-ratio per model per threshold."""
+    bench = synth.generate_benchmark_dataset(variable="rainfall", lead_day=3, n_days=500)
+    obs = bench["obs"]
+    weights = BlendingEngine.compute_weights(lead=72, regime="Active monsoon", variable="rainfall")
+    corr_m = {m: bias_correct_quantile(bench["models"][m], obs) for m in MODELS_LIST}
+    blend_val = core_blend(corr_m, weights)["value"]
+    all_fcsts = corr_m.copy()
+    all_fcsts["samanvay"] = blend_val
+
+    thresholds = [64.5, 115.5, 204.5]
+    threshold_labels = ["Heavy", "Very Heavy", "Extremely Heavy"]
+    results = []
+    for th, label in zip(thresholds, threshold_labels):
+        obs_bin = (obs >= th).astype(int)
+        model_pts = []
+        for m_id, fc in all_fcsts.items():
+            fc_bin = (fc >= th).astype(int)
+            tp = int(np.sum((fc_bin == 1) & (obs_bin == 1)))
+            fp = int(np.sum((fc_bin == 1) & (obs_bin == 0)))
+            fn = int(np.sum((fc_bin == 0) & (obs_bin == 1)))
+            pod = round(tp / max(tp + fn, 1), 3)
+            sr = round(tp / max(tp + fp, 1), 3)  # success ratio = 1 - FAR
+            meta = SOURCES.get(m_id, {})
+            model_pts.append({
+                "id": m_id,
+                "name": meta.get("name", m_id),
+                "color": meta.get("color", "#888"),
+                "type": meta.get("type", "NWP"),
+                "pod": pod,
+                "success_ratio": sr,
+                "is_blend": m_id == "samanvay"
+            })
+        results.append({"threshold": th, "label": label, "models": model_pts})
+    return {"variable": var, "thresholds": results}
+
+
+# S9-5. /api/extremes/events — 90-day event timeline (hit/miss/false alarm)
+@app.get("/api/extremes/events")
+def get_extremes_events(
+    var: str = Query("rainfall"),
+    threshold: float = Query(64.5)
+):
+    """Last 90-day verified extreme event timeline."""
+    import datetime as dt
+    bench = synth.generate_benchmark_dataset(variable="rainfall", lead_day=3, n_days=90)
+    obs = bench["obs"]
+    weights = BlendingEngine.compute_weights(lead=72, regime="Active monsoon", variable="rainfall")
+    corr_m = {m: bias_correct_quantile(bench["models"][m], obs) for m in MODELS_LIST}
+    blend_val = core_blend(corr_m, weights)["value"]
+
+    base = dt.date.today() - dt.timedelta(days=90)
+    events = []
+    for i, (ob, fc) in enumerate(zip(obs, blend_val)):
+        obs_event = ob >= threshold
+        fc_event = fc >= threshold
+        if obs_event and fc_event:
+            outcome = "hit"
+        elif obs_event and not fc_event:
+            outcome = "miss"
+        elif not obs_event and fc_event:
+            outcome = "false_alarm"
+        else:
+            outcome = "correct_null"
+        day_date = base + dt.timedelta(days=i)
+        events.append({
+            "date": day_date.isoformat(),
+            "date_label": day_date.strftime("%d %b"),
+            "observed": round(float(ob), 1),
+            "forecast": round(float(fc), 1),
+            "outcome": outcome
+        })
+    # Summary stats
+    hits = sum(1 for e in events if e["outcome"] == "hit")
+    misses = sum(1 for e in events if e["outcome"] == "miss")
+    false_alarms = sum(1 for e in events if e["outcome"] == "false_alarm")
+    return {
+        "variable": var, "threshold": threshold,
+        "sample_days": len(events),
+        "hits": hits, "misses": misses, "false_alarms": false_alarms,
+        "pod": round(hits / max(hits + misses, 1), 3),
+        "far": round(false_alarms / max(hits + false_alarms, 1), 3),
+        "events": events
+    }
+
+
+# S9-6. Enhanced /api/extremes/explain with model_contributions, ensemble_spread, threshold_crossing
+@app.get("/api/extremes/explain/v2")
+def get_extremes_explain_v2(district: str = Query("HP_SHM")):
+    """Enhanced explain: model contributions (sum to 100%), ensemble spread, threshold crossing chart."""
+    dist_clean = district.lower().strip()
+    rng = np.random.default_rng(abs(hash(district)) % (2**31))
+
+    if "hp_shm" in dist_clean or "shimla" in dist_clean:
+        dist_name = "Shimla"; state = "Himachal Pradesh"
+        alert_level = "RED"; calibrated_prob = 0.84
+        raw_model_vals = {"ncum_g": 92.0, "neps": 85.5, "ecmwf_ifs": 78.0,
+                         "graphcast": 71.0, "pangu": 68.5, "fourcastnet": 62.0, "imd_gfs": 58.0}
+        bc_model_vals  = {"ncum_g": 87.8, "neps": 82.1, "ecmwf_ifs": 75.3,
+                         "graphcast": 69.2, "pangu": 65.8, "fourcastnet": 60.4, "imd_gfs": 56.1}
+        model_weights  = {"ncum_g": 0.38, "neps": 0.27, "ecmwf_ifs": 0.19,
+                         "graphcast": 0.08, "pangu": 0.04, "fourcastnet": 0.02, "imd_gfs": 0.02}
+        ensemble_vals = [58.0, 63.0, 68.5, 74.0, 80.0, 85.5, 90.0, 96.0, 102.0, 115.0]
+        base_p_crossing = [0.84, 0.79, 0.71, 0.60, 0.48, 0.34, 0.22, 0.14, 0.09, 0.06]
+        bias_note = "Quantile-mapping applied: NCUM-G raw 92.0mm -> corrected 87.8mm (-4.6%). Reduces wet-season warm bias."
+        features = [
+            {"feature": "Climatological Base Rate", "attribution": 0.08, "type": "base"},
+            {"feature": "NCUM-G Convective Signal", "attribution": 0.26, "type": "model"},
+            {"feature": "NEPS Spread Boost", "attribution": 0.18, "type": "model"},
+            {"feature": "Antecedent Saturation", "attribution": 0.15, "type": "hydrology"},
+            {"feature": "Active Monsoon Trough", "attribution": 0.11, "type": "regime"},
+            {"feature": "Steep Slope Amplification", "attribution": 0.09, "type": "terrain"},
+            {"feature": "AI Tail Shrinkage", "attribution": -0.03, "type": "penalty"}
+        ]
+    elif "kl_wyd" in dist_clean or "wayanad" in dist_clean:
+        dist_name = "Wayanad"; state = "Kerala"
+        alert_level = "RED"; calibrated_prob = 0.79
+        raw_model_vals = {"ncum_g": 82.0, "neps": 90.0, "ecmwf_ifs": 74.0,
+                         "graphcast": 78.0, "pangu": 65.0, "fourcastnet": 61.0, "imd_gfs": 59.0}
+        bc_model_vals  = {"ncum_g": 78.5, "neps": 86.2, "ecmwf_ifs": 71.8,
+                         "graphcast": 75.3, "pangu": 63.1, "fourcastnet": 59.7, "imd_gfs": 57.4}
+        model_weights  = {"ncum_g": 0.29, "neps": 0.41, "ecmwf_ifs": 0.12,
+                         "graphcast": 0.10, "pangu": 0.04, "fourcastnet": 0.02, "imd_gfs": 0.02}
+        ensemble_vals = [55.0, 62.0, 68.0, 74.0, 80.0, 86.0, 92.0, 98.0, 106.0, 118.0]
+        base_p_crossing = [0.79, 0.73, 0.64, 0.52, 0.40, 0.29, 0.19, 0.12, 0.08, 0.05]
+        bias_note = "Quantile-mapping applied: NEPS raw 90.0mm -> corrected 86.2mm (-4.2%). Dry-bias tail correction for Kerala coast."
+        features = [
+            {"feature": "Climatological Base Rate", "attribution": 0.08, "type": "base"},
+            {"feature": "NEPS Ensemble Consensus", "attribution": 0.29, "type": "model"},
+            {"feature": "Western Ghat Orographic", "attribution": 0.18, "type": "terrain"},
+            {"feature": "Arabian Sea Moisture Flux", "attribution": 0.14, "type": "regime"},
+            {"feature": "Antecedent Soil Moisture", "attribution": 0.12, "type": "hydrology"},
+            {"feature": "AI Tail Shrinkage", "attribution": -0.02, "type": "penalty"}
+        ]
+    else:
+        dist_name = district; state = "India"
+        alert_level = "ORANGE"; calibrated_prob = 0.62
+        raw_model_vals = {"ncum_g": 74.0, "neps": 78.0, "ecmwf_ifs": 70.0,
+                         "graphcast": 68.0, "pangu": 64.0, "fourcastnet": 60.0, "imd_gfs": 58.0}
+        bc_model_vals  = {"ncum_g": 71.2, "neps": 74.9, "ecmwf_ifs": 67.6,
+                         "graphcast": 65.8, "pangu": 61.9, "fourcastnet": 58.4, "imd_gfs": 56.1}
+        model_weights  = {"ncum_g": 0.30, "neps": 0.30, "ecmwf_ifs": 0.20,
+                         "graphcast": 0.10, "pangu": 0.05, "fourcastnet": 0.03, "imd_gfs": 0.02}
+        ensemble_vals = [50.0, 57.0, 63.0, 68.0, 74.0, 80.0, 87.0, 94.0, 100.0, 110.0]
+        base_p_crossing = [0.62, 0.55, 0.46, 0.38, 0.30, 0.22, 0.15, 0.10, 0.07, 0.04]
+        bias_note = "Quantile-mapping applied. Seasonal correction reduces positive precipitation bias by ~4mm."
+        features = [
+            {"feature": "Climatological Base Rate", "attribution": 0.05, "type": "base"},
+            {"feature": "Ensemble Consensus", "attribution": 0.30, "type": "model"},
+            {"feature": "Synoptic Forcing", "attribution": 0.18, "type": "regime"},
+            {"feature": "Terrain Factor", "attribution": 0.08, "type": "terrain"},
+            {"feature": "Tail Correction", "attribution": 0.01, "type": "calibration"}
+        ]
+
+    # Normalise weights to sum exactly to 1.0
+    total_w = sum(model_weights.values())
+    model_weights = {k: v / total_w for k, v in model_weights.items()}
+
+    # Contribution % per model (weight * bc_value / blend_value * 100)
+    blend_val = sum(model_weights[m] * bc_model_vals[m] for m in bc_model_vals)
+    contribs = []
+    for m_id in MODELS_LIST:
+        meta = SOURCES.get(m_id, {})
+        w = model_weights.get(m_id, 0.0)
+        raw = raw_model_vals.get(m_id, 0.0)
+        bc = bc_model_vals.get(m_id, 0.0)
+        pct = round(w * bc / max(blend_val, 0.01) * 100, 1)
+        contribs.append({
+            "id": m_id,
+            "name": meta.get("name", m_id),
+            "color": meta.get("color", "#888"),
+            "type": meta.get("type", "NWP"),
+            "weight": round(w, 3),
+            "raw_forecast": raw,
+            "bias_corrected": bc,
+            "contribution_pct": pct
+        })
+    # Normalise contribution_pct to sum to 100.0
+    total_pct = sum(c["contribution_pct"] for c in contribs)
+    if total_pct > 0:
+        for c in contribs:
+            c["contribution_pct"] = round(c["contribution_pct"] / total_pct * 100, 1)
+    # Fix rounding so sum is exactly 100.0
+    diff = round(100.0 - sum(c["contribution_pct"] for c in contribs), 1)
+    if contribs:
+        contribs[0]["contribution_pct"] = round(contribs[0]["contribution_pct"] + diff, 1)
+
+    # Ensemble spread
+    ev = sorted(ensemble_vals)
+    spread = {
+        "min": ev[0], "p10": ev[1], "p25": ev[2], "p50": float(np.median(ev)),
+        "p75": ev[-3], "p90": ev[-2], "max": ev[-1],
+        "threshold": 64.5
+    }
+
+    # Threshold crossing per lead
+    crossing = [
+        {"lead_day": i+1, "p_exceed": round(p, 3)}
+        for i, p in enumerate(base_p_crossing)
+    ]
+
+    # Waterfall
+    running = 0.0
+    waterfall = []
+    for f in features:
+        val = f["attribution"]
+        waterfall.append({"step": f["feature"], "delta": round(val, 3),
+                          "start": round(running, 3), "end": round(running+val, 3), "type": f["type"]})
+        running += val
+
+    return {
+        "district": dist_name, "state": state,
+        "calibrated_exceedance_probability": calibrated_prob,
+        "alert_level": alert_level,
+        "blend_value_mm": round(blend_val, 1),
+        "features": features,
+        "waterfall": waterfall,
+        "model_contributions": contribs,
+        "ensemble_spread": spread,
+        "threshold_crossing": crossing,
+        "bias_correction_note": bias_note
+    }
+

@@ -1,112 +1,140 @@
-"use client";
+﻿"use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
-import { useExtremesQuery, useReliabilityQuery, useExtremesExplainQuery } from "@/lib/queries";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { AlertBadge } from "@/components/ui/AlertBadge";
-import { ReliabilityDiagram } from "@/components/charts/ReliabilityDiagram";
+import {
+  useExtremesByVariableQuery,
+  useExtremesTimelineQuery,
+  useExtremesRocQuery,
+  useExtremesPerfQuery,
+  useExtremesEventsQuery,
+  useExtremesExplainV2Query,
+} from "@/lib/queries";
+import { ExtremesTabs }             from "@/components/extremes/ExtremesTabs";
+import { DistrictWarningTable }     from "@/components/extremes/DistrictWarningTable";
+import { AlertDrawer }              from "@/components/extremes/AlertDrawer";
+import { ExtremesVerificationPanel } from "@/components/extremes/ExtremesVerificationPanel";
+import { AlertTimeline }            from "@/components/extremes/AlertTimeline";
+import type { ExtremeAlertItem }    from "@/lib/types";
+
+type TabVar = "rainfall" | "tmax" | "wind_gust";
+
+const VAR_THRESHOLD: Record<TabVar, number> = {
+  rainfall:  64.5,
+  tmax:      44.0,
+  wind_gust: 75.0,
+};
 
 export default function ExtremesPage() {
-  const { variable } = useAppStore();
-  const { data: extremes } = useExtremesQuery();
-  const { data: reliability } = useReliabilityQuery({ variable, threshold: 64.5, lead: 3 });
-  const { data: explain } = useExtremesExplainQuery("shimla");
+  const { variable: globalVariable } = useAppStore();
+  const [activeVar, setActiveVar] = useState<TabVar>("rainfall");
+  const [selectedAlert, setSelectedAlert] = useState<ExtremeAlertItem | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const alerts = extremes?.alerts || [];
+  const threshold = VAR_THRESHOLD[activeVar];
+
+  // Data queries
+  const { data: extremes, isLoading: extremesLoading } = useExtremesByVariableQuery(activeVar);
+  const { data: timeline, isLoading: timelineLoading } = useExtremesTimelineQuery(
+    selectedAlert?.id ?? "",
+    !!selectedAlert
+  );
+  const { data: explain, isLoading: explainLoading } = useExtremesExplainV2Query(
+    selectedAlert?.id ?? "",
+    !!selectedAlert
+  );
+  const { data: rocData,    isLoading: rocLoading }    = useExtremesRocQuery(activeVar, threshold);
+  const { data: perfData,   isLoading: perfLoading }   = useExtremesPerfQuery(activeVar);
+  const { data: eventsData, isLoading: eventsLoading } = useExtremesEventsQuery(activeVar, threshold);
+
+  const alerts = extremes?.alerts ?? [];
+
+  const handleDistrictSelect = useCallback((alert: ExtremeAlertItem) => {
+    setSelectedAlert(alert);
+    setDrawerOpen(true);
+  }, []);
+
+  const handleDrawerClose = useCallback(() => {
+    setDrawerOpen(false);
+  }, []);
+
+  const handleVariableChange = useCallback((v: TabVar) => {
+    setActiveVar(v);
+    setSelectedAlert(null);
+    setDrawerOpen(false);
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-text-1 tracking-tight">Disaster Decision Support & Extremes</h1>
-        <p className="text-xs text-text-3">
-          IMD Four-Tier Alert Matrix (Red / Orange / Yellow) with Calibrated Exceedance Probabilities & SOP Protocols
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Active Extreme Alerts Table (7 cols) */}
-        <div className="lg:col-span-7">
-          <GlassCard className="p-4 flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="text-sm font-semibold text-text-1">Active Operational Advisories</h3>
-                <p className="text-xs text-text-3">{alerts.length} districts under active meteorological warning</p>
-              </div>
-              <div className="flex gap-2">
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">
-                  {extremes?.red_count || 0} RED
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                  {extremes?.orange_count || 0} ORANGE
-                </span>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-border/60 text-text-3">
-                    <th className="py-2 px-2">District</th>
-                    <th className="py-2 px-2">Alert</th>
-                    <th className="py-2 px-2 text-right">Forecast</th>
-                    <th className="py-2 px-2 text-right">P(Ext)</th>
-                    <th className="py-2 px-2">Recommended SOP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {alerts.map((a) => (
-                    <tr key={a.id} className="border-b border-border/20 hover:bg-surface-2/40">
-                      <td className="py-2.5 px-2 font-medium text-text-1">
-                        {a.district} <span className="text-[10px] text-text-3">({a.state})</span>
-                      </td>
-                      <td className="py-2.5 px-2">
-                        <AlertBadge level={a.alert_level} />
-                      </td>
-                      <td className="py-2.5 px-2 text-right font-mono text-cyan-400 font-bold">
-                        {a.forecast_value} mm
-                      </td>
-                      <td className="py-2.5 px-2 text-right font-mono text-text-1">
-                        {Math.round(a.p_extreme * 100)}%
-                      </td>
-                      <td className="py-2.5 px-2 text-text-3 text-[11px] truncate max-w-[200px]" title={a.recommended_action}>
-                        {a.recommended_action}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </GlassCard>
+      {/* Page header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text-1 tracking-tight">
+            Extreme Weather Guidance
+          </h1>
+          <p className="text-xs text-text-3 mt-1 max-w-xl">
+            IMD four-tier alert matrix (Green / Yellow / Orange / Red) with calibrated exceedance
+            probabilities, district-level advisories, and SOP protocols · MoES / NCMRWF PS 26081
+          </p>
         </div>
-
-        {/* Reliability & Explainability (5 cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-5">
-          <ReliabilityDiagram
-            bins={reliability?.bins || []}
-            brierSkillScore={reliability?.brier_skill_score_pct || 37.3}
-            threshold={64.5}
-          />
-
-          {/* Explainability Card */}
-          {explain && (
-            <GlassCard className="p-4 flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-text-1">Alert Feature Attribution ({explain.district})</h3>
-              <p className="text-xs text-text-3">SHAP-style additive factors triggering warning:</p>
-              <div className="flex flex-col gap-1.5 mt-1">
-                {explain.features.slice(0, 4).map((f, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs p-1.5 bg-surface-2 rounded-lg">
-                    <span className="text-text-2">{f.feature}</span>
-                    <span className="font-mono font-bold text-cyan-400">
-                      {f.attribution > 0 ? `+${f.attribution}` : f.attribution}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
+        <div className="flex gap-2 flex-shrink-0">
+          {extremes && (
+            <>
+              <span className="text-[11px] font-mono px-2 py-1 rounded border bg-red-500/15 border-red-500/40 text-red-400 font-bold">
+                {extremes.red_count} RED
+              </span>
+              <span className="text-[11px] font-mono px-2 py-1 rounded border bg-amber-500/15 border-amber-500/40 text-amber-400 font-bold">
+                {extremes.orange_count} ORANGE
+              </span>
+              <span className="text-[11px] font-mono px-2 py-1 rounded border bg-yellow-500/15 border-yellow-500/40 text-yellow-400 font-bold">
+                {extremes.yellow_count} YELLOW
+              </span>
+            </>
           )}
         </div>
       </div>
+
+      {/* 1. Variable tabs + probability map */}
+      <ExtremesTabs
+        activeVariable={activeVar}
+        onVariableChange={handleVariableChange}
+      />
+
+      {/* 2. District warning table */}
+      <DistrictWarningTable
+        alerts={alerts}
+        isLoading={extremesLoading}
+        onDistrictSelect={handleDistrictSelect}
+        selectedId={selectedAlert?.id}
+      />
+
+      {/* 3. Alert timeline for selected district */}
+      <AlertTimeline
+        timeline={timeline ?? null}
+        isLoading={timelineLoading && !!selectedAlert}
+        districtName={selectedAlert ? `${selectedAlert.district}, ${selectedAlert.state}` : undefined}
+      />
+
+      {/* 4. Verification panel */}
+      <ExtremesVerificationPanel
+        rocData={rocData ?? null}
+        rocLoading={rocLoading}
+        perfData={perfData ?? null}
+        perfLoading={perfLoading}
+        eventsData={eventsData ?? null}
+        eventsLoading={eventsLoading}
+        variable={activeVar}
+        threshold={threshold}
+      />
+
+      {/* 5. Alert Drawer (portal-style fixed overlay) */}
+      <AlertDrawer
+        alert={selectedAlert}
+        explain={explain ?? null}
+        timeline={timeline ?? null}
+        isOpen={drawerOpen}
+        onClose={handleDrawerClose}
+      />
     </div>
   );
 }

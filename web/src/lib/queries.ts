@@ -18,6 +18,11 @@ import {
   ExtremesResponse,
   ExtremesVerificationResponse,
   ExtremesExplainResponse,
+  ExtremesExplainV2Response,
+  ExtremesTimelineResponse,
+  RocResponse,
+  PerfDiagramResponse,
+  EventTimelineResponse,
   RegimesTimelineResponse,
   RegimesWeightsResponse,
   ShimlaImpactResponse,
@@ -29,6 +34,7 @@ import {
   PlumeResponse,
   WeightsMapResponse
 } from "./types";
+
 
 // Standard query configuration: Stale-While-Revalidate with caching
 const STALE_TIME = 60 * 1000; // 60 seconds
@@ -48,6 +54,12 @@ export const queryKeys = {
   extremes: ["extremes"] as const,
   extremesVerification: (v: string) => ["extremesVerification", v] as const,
   extremesExplain: (d: string) => ["extremesExplain", d] as const,
+  extremesByVariable: (v: string) => ["extremesByVariable", v] as const,
+  extremesTimeline: (d: string) => ["extremesTimeline", d] as const,
+  extremesRoc: (v: string, t: number) => ["extremesRoc", v, t] as const,
+  extremesPerf: (v: string) => ["extremesPerf", v] as const,
+  extremesEvents: (v: string, t: number) => ["extremesEvents", v, t] as const,
+  extremesExplainV2: (d: string) => ["extremesExplainV2", d] as const,
   regimesTimeline: ["regimesTimeline"] as const,
   regimesWeights: ["regimesWeights"] as const,
   shimlaImpact: (r?: number, a?: number) => ["shimlaImpact", r ?? 85, a ?? 142] as const,
@@ -338,3 +350,57 @@ export function useWeightsMapQuery(params: {
   });
 }
 
+// =============================================================
+// STEP 9 — Extreme Weather Guidance Query Hooks
+// =============================================================
+
+export function useExtremesByVariableQuery(variable: string = "rainfall") {
+  return useQuery({
+    queryKey: queryKeys.extremesByVariable(variable),
+    queryFn: () => api.fetchExtremesByVariable(variable),
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000
+  });
+}
+
+export function useExtremesTimelineQuery(district: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.extremesTimeline(district),
+    queryFn: () => api.fetchExtremesTimeline(district),
+    staleTime: STALE_TIME,
+    enabled: enabled && district.length > 0
+  });
+}
+
+export function useExtremesRocQuery(variable: string = "rainfall", threshold: number = 64.5) {
+  return useQuery({
+    queryKey: queryKeys.extremesRoc(variable, threshold),
+    queryFn: () => api.fetchExtremesRoc(variable, threshold),
+    staleTime: STALE_TIME
+  });
+}
+
+export function useExtremesPerfQuery(variable: string = "rainfall") {
+  return useQuery({
+    queryKey: queryKeys.extremesPerf(variable),
+    queryFn: () => api.fetchExtremesPerf(variable),
+    staleTime: STALE_TIME
+  });
+}
+
+export function useExtremesEventsQuery(variable: string = "rainfall", threshold: number = 64.5) {
+  return useQuery({
+    queryKey: queryKeys.extremesEvents(variable, threshold),
+    queryFn: () => api.fetchExtremesEvents(variable, threshold),
+    staleTime: STALE_TIME
+  });
+}
+
+export function useExtremesExplainV2Query(district: string, enabled = true) {
+  return useQuery<ExtremesExplainV2Response>({
+    queryKey: queryKeys.extremesExplainV2(district),
+    queryFn: () => api.fetchExtremesExplainV2(district),
+    staleTime: STALE_TIME,
+    enabled: enabled && district.length > 0
+  });
+}

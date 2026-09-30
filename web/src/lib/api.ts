@@ -17,6 +17,11 @@ import {
   ExtremesResponse,
   ExtremesVerificationResponse,
   ExtremesExplainResponse,
+  ExtremesExplainV2Response,
+  ExtremesTimelineResponse,
+  RocResponse,
+  PerfDiagramResponse,
+  EventTimelineResponse,
   RegimesTimelineResponse,
   RegimesWeightsResponse,
   ShimlaImpactResponse,
@@ -32,6 +37,7 @@ import {
   PlumeResponse,
   WeightsMapResponse
 } from "./types";
+
 
 const API_BASE = typeof window !== "undefined" ? "/api" : "http://127.0.0.1:8000/api";
 
@@ -329,3 +335,36 @@ export async function fetchWeightsMap(params: {
   return request<WeightsMapResponse>(`/weights/map?${qs.toString()}`);
 }
 
+// =============================================================
+// STEP 9 — Extreme Weather Guidance API functions
+// =============================================================
+
+// S9-1: Extremes filtered by variable
+export async function fetchExtremesByVariable(variable: string = "rainfall"): Promise<ExtremesResponse> {
+  return request<ExtremesResponse>(`/extremes/by-variable?var=${encodeURIComponent(variable)}`);
+}
+
+// S9-2: 10-day alert timeline per district
+export async function fetchExtremesTimeline(district: string): Promise<ExtremesTimelineResponse> {
+  return request<ExtremesTimelineResponse>(`/extremes/timeline?district=${encodeURIComponent(district)}`);
+}
+
+// S9-3: ROC curve
+export async function fetchExtremesRoc(variable: string = "rainfall", threshold: number = 64.5): Promise<RocResponse> {
+  return request<RocResponse>(`/extremes/roc?var=${encodeURIComponent(variable)}&threshold=${threshold}`);
+}
+
+// S9-4: Performance diagram
+export async function fetchExtremesPerf(variable: string = "rainfall"): Promise<PerfDiagramResponse> {
+  return request<PerfDiagramResponse>(`/extremes/perf?var=${encodeURIComponent(variable)}`);
+}
+
+// S9-5: 90-day event timeline
+export async function fetchExtremesEvents(variable: string = "rainfall", threshold: number = 64.5): Promise<EventTimelineResponse> {
+  return request<EventTimelineResponse>(`/extremes/events?var=${encodeURIComponent(variable)}&threshold=${threshold}`);
+}
+
+// S9-6: Enhanced explain v2
+export async function fetchExtremesExplainV2(district: string): Promise<ExtremesExplainV2Response> {
+  return request<ExtremesExplainV2Response>(`/extremes/explain/v2?district=${encodeURIComponent(district)}`);
+}
