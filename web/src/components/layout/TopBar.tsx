@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
-import React, { useState } from "react";
-import { usePathname } from "next/navigation";
+import React, { useState, useRef, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Sun,
   Moon,
@@ -12,8 +12,12 @@ import {
   Menu,
   CloudRain,
   Clock,
-  MapPin,
-  Wind
+  Wind,
+  Search,
+  Sparkles,
+  BookOpen,
+  Keyboard,
+  Compass
 } from "lucide-react";
 import { useAppStore, AVAILABLE_LEADS } from "@/lib/store";
 import { useExtremesQuery } from "@/lib/queries";
@@ -41,10 +45,10 @@ const REGIMES_LIST = [
 
 export function TopBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const {
     variable,
     lead,
-    region,
     regime,
     theme,
     setVariable,
@@ -54,8 +58,16 @@ export function TopBar() {
     setIsShortcutsOpen,
     setIsRunBlendOpen,
     setIsAlertsOpen,
-    setIsMobileNavOpen
+    setIsMobileNavOpen,
+    setIsCommandPaletteOpen,
+    setIsTourOpen,
+    setTourStep,
+    setIsDemoMode,
+    setDemoStep
   } = useAppStore();
+
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const helpMenuRef = useRef<HTMLDivElement>(null);
 
   const { data: extremesData } = useExtremesQuery();
   const activeAlertCount = extremesData
@@ -63,8 +75,21 @@ export function TopBar() {
     : 3;
 
   const currentRoute = NAVIGATION_ROUTES.find((r) => r.path === pathname) || {
-    label: "Command Center"
+    label: pathname === "/about" ? "Methodology" : "Command Center"
   };
+
+  // Close help menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (helpMenuRef.current && !helpMenuRef.current.contains(e.target as Node)) {
+        setIsHelpOpen(false);
+      }
+    };
+    if (isHelpOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isHelpOpen]);
 
   return (
     <header className="h-16 border-b border-border/70 bg-surface-1/80 backdrop-blur-xl px-4 flex items-center justify-between z-20 shrink-0">
@@ -138,8 +163,35 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Right Actions: Quick Actions, Alerts Bell, Shortcuts, Theme, User Badge */}
+      {/* Right Actions */}
       <div className="flex items-center gap-2">
+        {/* Command Palette Button */}
+        <button
+          onClick={() => setIsCommandPaletteOpen(true)}
+          className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-surface-2/80 hover:bg-surface-3 border border-border/70 text-text-3 hover:text-text-1 text-xs transition-colors cursor-pointer"
+          title="Open Command Palette (Ctrl+K)"
+          aria-label="Command Palette"
+        >
+          <Search className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="text-[11px] font-medium hidden md:inline">Command Palette</span>
+          <kbd className="font-mono text-[9px] px-1 py-0.2 rounded bg-surface-3 border border-border/60 text-text-2">
+            Ctrl+K
+          </kbd>
+        </button>
+
+        {/* Demo Mode Button */}
+        <button
+          onClick={() => {
+            setDemoStep(0);
+            setIsDemoMode(true);
+          }}
+          className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 to-rose-500/15 border border-amber-500/40 text-amber-300 text-xs font-semibold hover:border-amber-400 transition-all cursor-pointer shadow-sm"
+          title="Launch 2-Minute Evaluator Demo Mode"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: "6s" }} />
+          <span>Demo Mode</span>
+        </button>
+
         {/* Quick Action: Run Blend */}
         <MagneticButton
           onClick={() => setIsRunBlendOpen(true)}
@@ -163,7 +215,7 @@ export function TopBar() {
         <button
           onClick={() => setIsAlertsOpen(true)}
           className="relative p-2 rounded-full text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors"
-          title="Active severe weather advisories"
+          title="Active severe weather advisories & notification centre"
           aria-label="Severe weather alerts"
         >
           <Bell className="w-4 h-4" />
@@ -174,20 +226,84 @@ export function TopBar() {
           )}
         </button>
 
-        {/* Keyboard Shortcuts (?) Button */}
-        <button
-          onClick={() => setIsShortcutsOpen(true)}
-          className="p-2 rounded-full text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors hidden sm:block"
-          title="Keyboard shortcuts (?)"
-          aria-label="Keyboard shortcuts"
-        >
-          <HelpCircle className="w-4 h-4" />
-        </button>
+        {/* Help Menu Dropdown (Tour, Shortcuts, Whitepaper) */}
+        <div className="relative" ref={helpMenuRef}>
+          <button
+            onClick={() => setIsHelpOpen(!isHelpOpen)}
+            className="p-2 rounded-full text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors cursor-pointer"
+            title="Help, Tour & Shortcuts"
+            aria-label="Help menu"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
 
-        {/* Theme Toggle (Smooth Crossfade) */}
+          {isHelpOpen && (
+            <div className="absolute right-0 top-full mt-2 w-56 bg-surface-1 border border-border/80 rounded-2xl shadow-2xl p-1.5 z-50 text-xs flex flex-col gap-0.5 animate-in zoom-in-95 duration-150">
+              <button
+                onClick={() => {
+                  setIsHelpOpen(false);
+                  setTourStep(0);
+                  setIsTourOpen(true);
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-2 text-text-2 hover:text-text-1 transition-colors text-left"
+              >
+                <Compass className="w-4 h-4 text-cyan-400" />
+                <div>
+                  <div className="font-semibold">Guided Product Tour</div>
+                  <div className="text-[10px] text-text-3">8-step feature walkthrough</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsHelpOpen(false);
+                  setDemoStep(0);
+                  setIsDemoMode(true);
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-2 text-text-2 hover:text-text-1 transition-colors text-left"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <div>
+                  <div className="font-semibold">2-Minute Demo Mode</div>
+                  <div className="text-[10px] text-text-3">Auto-played evaluator tour</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsHelpOpen(false);
+                  setIsShortcutsOpen(true);
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-2 text-text-2 hover:text-text-1 transition-colors text-left"
+              >
+                <Keyboard className="w-4 h-4 text-indigo-400" />
+                <div>
+                  <div className="font-semibold">Keyboard Shortcuts</div>
+                  <div className="text-[10px] text-text-3">Hotkeys reference (?)</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsHelpOpen(false);
+                  router.push("/about");
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-2 text-text-2 hover:text-text-1 transition-colors text-left border-t border-border/40 mt-1 pt-1.5"
+              >
+                <BookOpen className="w-4 h-4 text-emerald-400" />
+                <div>
+                  <div className="font-semibold">Methodology Whitepaper</div>
+                  <div className="text-[10px] text-text-3">KaTeX equations &amp; sources</div>
+                </div>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Theme Toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-full text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors"
+          className="p-2 rounded-full text-text-3 hover:text-text-1 hover:bg-surface-2 transition-colors cursor-pointer"
           title={`Switch to ${theme === "dark" ? "light" : "dark"} theme (T)`}
           aria-label="Toggle theme"
         >

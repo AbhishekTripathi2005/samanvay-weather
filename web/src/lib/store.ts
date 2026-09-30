@@ -1,4 +1,4 @@
-// SAMANVAY Global State Management (Zustand)
+﻿// SAMANVAY Global State Management (Zustand)
 // MoES / NCMRWF (PS 26081)
 
 import { create } from "zustand";
@@ -24,6 +24,11 @@ interface AppState extends FilterState {
   isRunBlendOpen: boolean;
   isAlertsOpen: boolean;
   isMobileNavOpen: boolean;
+  isCommandPaletteOpen: boolean;
+  isTourOpen: boolean;
+  tourStep: number;
+  isDemoMode: boolean;
+  demoStep: number;
 
   selectedRegion: string;
   selectedSource: string;
@@ -48,6 +53,11 @@ interface AppState extends FilterState {
   setIsRunBlendOpen: (open: boolean) => void;
   setIsAlertsOpen: (open: boolean) => void;
   setIsMobileNavOpen: (open: boolean) => void;
+  setIsCommandPaletteOpen: (open: boolean) => void;
+  setIsTourOpen: (open: boolean) => void;
+  setTourStep: (step: number) => void;
+  setIsDemoMode: (demo: boolean) => void;
+  setDemoStep: (step: number) => void;
 
   setSelectedRegion: (code: string) => void;
   setSelectedSource: (src: string) => void;
@@ -70,6 +80,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   isRunBlendOpen: false,
   isAlertsOpen: false,
   isMobileNavOpen: false,
+  isCommandPaletteOpen: false,
+  isTourOpen: false,
+  tourStep: 0,
+  isDemoMode: false,
+  demoStep: 0,
 
   selectedRegion: "DL",
   selectedSource: "samanvay",
@@ -128,6 +143,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   setIsRunBlendOpen: (isRunBlendOpen) => set({ isRunBlendOpen }),
   setIsAlertsOpen: (isAlertsOpen) => set({ isAlertsOpen }),
   setIsMobileNavOpen: (isMobileNavOpen) => set({ isMobileNavOpen }),
+  setIsCommandPaletteOpen: (isCommandPaletteOpen) => set({ isCommandPaletteOpen }),
+  setIsTourOpen: (isTourOpen) => set({ isTourOpen }),
+  setTourStep: (tourStep) => set({ tourStep }),
+  setIsDemoMode: (isDemoMode) => set({ isDemoMode }),
+  setDemoStep: (demoStep) => set({ demoStep }),
 
   setSelectedRegion: (selectedRegion) => set({ selectedRegion, region: selectedRegion }),
   setSelectedSource: (selectedSource) => set({ selectedSource }),

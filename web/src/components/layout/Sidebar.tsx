@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -13,6 +13,7 @@ import {
   Sliders,
   Cpu,
   Palette,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Radio
@@ -23,14 +24,15 @@ import { Kbd } from "@/components/ui/Kbd";
 
 export const NAVIGATION_ROUTES = [
   { path: "/overview", label: "Command Center", icon: LayoutDashboard, key: "1", desc: "National Command Center" },
-  { path: "/forecast", label: "Forecast Explorer", icon: Map, key: "2", desc: "0.5° Grid & Regional Consensus" },
+  { path: "/forecast", label: "Forecast Explorer", icon: Map, key: "2", desc: "0.5Â° Grid & Regional Consensus" },
   { path: "/models", label: "Model Matrix", icon: Layers, key: "3", desc: "7 Models vs Blended Skill" },
   { path: "/extremes", label: "Disaster DSS", icon: AlertTriangle, key: "4", desc: "Extreme Weather Alerts" },
   { path: "/impact", label: "Mountain Hydrology", icon: Mountain, key: "5", desc: "Shimla Landslide & Runoff" },
   { path: "/regimes", label: "Synoptic Regimes", icon: CloudRain, key: "6", desc: "Monsoon & Circulation Regimes" },
   { path: "/weights", label: "Adaptive Weights", icon: Sliders, key: "7", desc: "NNLS Stacking & Attribution" },
   { path: "/ops", label: "Ingestion Pipeline", icon: Cpu, key: "8", desc: "Model DAGs & Streaming SSE" },
-  { path: "/design-system", label: "Design System", icon: Palette, key: "9", desc: "Tokens & Component Showroom" }
+  { path: "/design-system", label: "Design System", icon: Palette, key: "9", desc: "Tokens & Component Showroom" },
+  { path: "/about", label: "Methodology", icon: BookOpen, key: "0", desc: "Formulas, Data & Credits" }
 ];
 
 export function Sidebar() {
@@ -55,7 +57,7 @@ export function Sidebar() {
                 SAMANVAY
               </span>
               <span className="text-[10px] font-mono text-cyan-400 truncate">
-                समन्वय | MoES / NCMRWF
+                à¤¸à¤®à¤¨à¥à¤µà¤¯ | MoES / NCMRWF
               </span>
             </div>
           )}
@@ -122,7 +124,7 @@ export function Sidebar() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-[11px] font-semibold text-text-1">SYSTEM ONLINE</span>
             </div>
-            <p className="text-[10px] text-text-3 font-mono">7 Models • 240h Cycle</p>
+            <p className="text-[10px] text-text-3 font-mono">7 Models â€¢ 240h Cycle</p>
           </div>
         ) : (
           <Tooltip content="System Operational (7 Models Synced)" side="right">

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import { Sidebar } from "./Sidebar";
@@ -6,7 +6,10 @@ import { TopBar } from "./TopBar";
 import { MobileNav } from "./MobileNav";
 import { KeyboardShortcuts } from "./KeyboardShortcuts";
 import { RunBlendModal } from "./RunBlendModal";
-import { AlertsDrawer } from "./AlertsDrawer";
+import { NotificationCenter } from "./NotificationCenter";
+import { CommandPalette } from "./CommandPalette";
+import { ProductTour } from "./ProductTour";
+import { DemoMode } from "./DemoMode";
 import { UrlSync } from "./UrlSync";
 import { Toaster } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,7 +27,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </React.Suspense>
         <KeyboardShortcuts />
         <RunBlendModal />
-        <AlertsDrawer />
+        <NotificationCenter />
+        <CommandPalette />
+        <ProductTour />
+        <DemoMode />
         <Toaster position="top-right" richColors />
         <main className="w-full min-h-screen">{children}</main>
       </div>
@@ -38,7 +44,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </React.Suspense>
       <KeyboardShortcuts />
       <RunBlendModal />
-      <AlertsDrawer />
+      <NotificationCenter />
+      <CommandPalette />
+      <ProductTour />
+      <DemoMode />
       <Toaster position="top-right" richColors />
 
       {/* Desktop Collapsible Sidebar */}
