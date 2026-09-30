@@ -47,7 +47,7 @@ const MAX_LAT = 38.0;
 const MIN_LON = 68.0;
 const MAX_LON = 98.0;
 
-export function ForecastMap({
+function ForecastMapComponent({
   variable = "rainfall",
   leadHours = 72,
   gridValues,
@@ -144,8 +144,42 @@ export function ForecastMap({
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
+      role="region"
+      aria-label={`Indian Meteorological Forecast Map: ${variable} at +${leadHours}h lead time`}
       className={`relative w-full h-full min-h-[480px] bg-surface-0 rounded-2xl overflow-hidden border border-border/50 select-none ${className}`}
     >
+      {/* Screen-reader accessible data table alternative (WCAG AA) */}
+      <div className="sr-only">
+        <h3>Tabular Forecast Summary across Indian Regions</h3>
+        <table>
+          <caption>Forecast {variable} ({unit}) for +{leadHours}h lead time</caption>
+          <thead>
+            <tr>
+              <th scope="col">Region Code</th>
+              <th scope="col">Region Name</th>
+              <th scope="col">Zone</th>
+              <th scope="col">Consensus ({unit})</th>
+              <th scope="col">P10-P90 Spread</th>
+              <th scope="col">Alert Level</th>
+              <th scope="col">Dominant Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {statesData.map((st) => (
+              <tr key={st.code}>
+                <td>{st.code}</td>
+                <td>{st.name}</td>
+                <td>{st.zone}</td>
+                <td>{st.value}</td>
+                <td>{st.p10} - {st.p90}</td>
+                <td>{st.alert_level}</td>
+                <td>{st.dominant_model}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       {/* Background Indian Topographic Grid Map Base */}
       <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#00F5FF_1px,transparent_1px)] [background-size:24px_24px]" />
 
@@ -308,3 +342,6 @@ export function ForecastMap({
     </div>
   );
 }
+
+export const ForecastMap = React.memo(ForecastMapComponent);
+

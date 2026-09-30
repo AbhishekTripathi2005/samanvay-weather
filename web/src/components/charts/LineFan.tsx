@@ -30,7 +30,7 @@ interface LineFanProps {
   className?: string;
 }
 
-export function LineFan({
+function LineFanComponent({
   data,
   variable = "Rainfall",
   title = "Predictive Plume & Uncertainty Fan (Day 1..10)",
@@ -38,7 +38,36 @@ export function LineFan({
   className = ""
 }: LineFanProps) {
   return (
-    <GlassCard className={`p-4 flex flex-col ${className}`}>
+    <GlassCard
+      role="region"
+      aria-label={title}
+      className={`p-4 flex flex-col ${className}`}
+    >
+      {/* Screen-reader accessible alternative table */}
+      <div className="sr-only">
+        <h4>Forecast Lead Trajectory and Uncertainty Intervals</h4>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Lead Time</th>
+              <th scope="col">Consensus Mean ({unit})</th>
+              <th scope="col">P10 Lower Bound</th>
+              <th scope="col">P90 Upper Bound</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((d) => (
+              <tr key={d.lead}>
+                <td>{d.label}</td>
+                <td>{d.consensus}</td>
+                <td>{d.p10}</td>
+                <td>{d.p90}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-text-1">{title}</h3>
@@ -108,3 +137,6 @@ export function LineFan({
     </GlassCard>
   );
 }
+
+export const LineFan = React.memo(LineFanComponent);
+

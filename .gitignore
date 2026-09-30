@@ -6,6 +6,9 @@ node_modules/
 out/
 build/
 dist/
+test-results/
+playwright-report/
+
 
 # Python
 __pycache__/

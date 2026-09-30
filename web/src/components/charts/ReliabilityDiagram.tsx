@@ -22,7 +22,7 @@ interface ReliabilityDiagramProps {
   className?: string;
 }
 
-export function ReliabilityDiagram({
+function ReliabilityDiagramComponent({
   bins = [],
   brierSkillScore = 37.3,
   title = "Reliability Diagram (Calibrated Exceedance)",
@@ -38,7 +38,38 @@ export function ReliabilityDiagram({
   }));
 
   return (
-    <GlassCard className={`p-4 flex flex-col ${className}`}>
+    <GlassCard
+      role="region"
+      aria-label={title}
+      className={`p-4 flex flex-col ${className}`}
+    >
+      {/* Screen-reader accessible alternative table */}
+      <div className="sr-only">
+        <h4>Reliability Diagram Data: Forecast Probability vs Observed Frequency</h4>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Forecast Probability (%)</th>
+              <th scope="col">Perfect Reliability (%)</th>
+              <th scope="col">Calibrated Observed Frequency (%)</th>
+              <th scope="col">Raw Observed Frequency (%)</th>
+              <th scope="col">Sample Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chartData.map((d, i) => (
+              <tr key={i}>
+                <td>{d.probPct}%</td>
+                <td>{d.perfect}%</td>
+                <td>{d.calibratedObs}%</td>
+                <td>{d.rawObs}%</td>
+                <td>{d.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-sm font-semibold text-text-1">{title}</h3>
@@ -107,3 +138,6 @@ export function ReliabilityDiagram({
     </GlassCard>
   );
 }
+
+export const ReliabilityDiagram = React.memo(ReliabilityDiagramComponent);
+

@@ -13,7 +13,7 @@ interface HeatmapProps {
   className?: string;
 }
 
-export function Heatmap({
+function HeatmapComponent({
   title = "Weights Heatmap",
   description = "Dynamic weights across forecast leads and models",
   rows,
@@ -31,7 +31,11 @@ export function Heatmap({
   };
 
   return (
-    <GlassCard className={`p-4 flex flex-col ${className}`}>
+    <GlassCard
+      role="region"
+      aria-label={title}
+      className={`p-4 flex flex-col ${className}`}
+    >
       <div className="mb-3">
         <h3 className="text-sm font-semibold text-text-1">{title}</h3>
         <p className="text-xs text-text-3">{description}</p>
@@ -93,3 +97,6 @@ export function Heatmap({
     </GlassCard>
   );
 }
+
+export const Heatmap = React.memo(HeatmapComponent);
+

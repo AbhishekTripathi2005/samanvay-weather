@@ -19,7 +19,7 @@ interface RadialWeightsProps {
   className?: string;
 }
 
-export function RadialWeights({
+function RadialWeightsComponent({
   weights,
   modelsMeta = [],
   title = "Model Weight Allocation",
@@ -36,7 +36,34 @@ export function RadialWeights({
   });
 
   return (
-    <GlassCard className={`p-4 flex flex-col ${className}`}>
+    <GlassCard
+      role="region"
+      aria-label={title}
+      className={`p-4 flex flex-col ${className}`}
+    >
+      {/* Screen-reader accessible alternative table */}
+      <div className="sr-only">
+        <h4>Model Weight Allocation</h4>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Weight Percentage (%)</th>
+              <th scope="col">Raw Weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            {chartData.map((d) => (
+              <tr key={d.model}>
+                <td>{d.model}</td>
+                <td>{d.weightPct}%</td>
+                <td>{d.rawWeight.toFixed(4)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <div className="mb-2">
         <h3 className="text-sm font-semibold text-text-1">{title}</h3>
         <p className="text-xs text-text-3">Multi-model affinity balance (sums to 100%)</p>
@@ -79,3 +106,6 @@ export function RadialWeights({
     </GlassCard>
   );
 }
+
+export const RadialWeights = React.memo(RadialWeightsComponent);
+

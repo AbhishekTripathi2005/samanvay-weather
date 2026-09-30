@@ -11,7 +11,7 @@ interface TaylorDiagramProps {
   className?: string;
 }
 
-export function TaylorDiagram({
+function TaylorDiagramComponent({
   referenceStd = 12.5,
   models = [],
   title = "Taylor Diagram (Pattern Correlation & Spread)",
@@ -35,7 +35,36 @@ export function TaylorDiagram({
   const refCoords = toCoords(1.0, 1.0);
 
   return (
-    <GlassCard className={`p-4 flex flex-col ${className}`}>
+    <GlassCard
+      role="region"
+      aria-label={title}
+      className={`p-4 flex flex-col ${className}`}
+    >
+      {/* Screen-reader accessible alternative table */}
+      <div className="sr-only">
+        <h4>Model Performance Metrics (Taylor Diagram)</h4>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Model</th>
+              <th scope="col">Correlation</th>
+              <th scope="col">Normalized Std-Dev</th>
+              <th scope="col">Centered RMS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {models.map((m) => (
+              <tr key={m.id}>
+                <td>{m.name}</td>
+                <td>{m.correlation}</td>
+                <td>{m.normalized_std}</td>
+                <td>{m.centered_rms}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       <div className="mb-2">
         <h3 className="text-sm font-semibold text-text-1">{title}</h3>
         <p className="text-xs text-text-3">Radial: normalized std-dev | Spoke: correlation | Arcs: centered RMS</p>
@@ -144,3 +173,6 @@ export function TaylorDiagram({
     </GlassCard>
   );
 }
+
+export const TaylorDiagram = React.memo(TaylorDiagramComponent);
+
