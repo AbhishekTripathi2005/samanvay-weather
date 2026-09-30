@@ -404,3 +404,27 @@ export function useExtremesExplainV2Query(district: string, enabled = true) {
     enabled: enabled && district.length > 0
   });
 }
+
+// =============================================================
+// STEP 11 — Disaster Management Query Hooks
+// =============================================================
+
+export function useWaterBalanceQuery(params: {
+  forecast_rain?: number;
+  api_30?: number;
+  scenario_pct?: number;
+}) {
+  return useQuery({
+    queryKey: ["waterBalance", params.forecast_rain ?? 85, params.api_30 ?? 142, params.scenario_pct ?? 0],
+    queryFn: () => api.fetchWaterBalance(params),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useLandslideDemQuery() {
+  return useQuery({
+    queryKey: ["landslideDem"],
+    queryFn: () => api.fetchLandslideDem(),
+    staleTime: 10 * 60 * 1000, // 10 minutes — DEM does not change
+  });
+}

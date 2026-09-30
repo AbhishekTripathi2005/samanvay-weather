@@ -928,3 +928,57 @@ export interface WeightsMapResponse {
   }>;
 }
 
+
+// =============================================================
+// STEP 11 — Disaster Management Water Balance + DEM types
+// =============================================================
+
+export type FloodRisk = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+export type SusceptLevel = "LOW" | "MODERATE" | "HIGH" | "VERY_HIGH";
+
+export interface WaterBalanceDay {
+  day: number;
+  date: string;
+  date_label: string;
+  rainfall_mm: number;
+  soil_moisture_mm: number;
+  soil_moisture_pct: number;
+  runoff_mm: number;
+  et_mm: number;
+  delta_S: number;
+  flood_risk: FloodRisk;
+  mass_conserved: boolean;
+}
+
+export interface WaterBalanceResponse {
+  scenario_pct: number;
+  effective_rainfall_day1: number;
+  initial_soil_moisture_mm: number;
+  initial_soil_moisture_pct: number;
+  s_max_mm: number;
+  flood_threshold_80p_mm: number;
+  peak_runoff_mm: number;
+  peak_soil_moisture_mm: number;
+  mass_conservation_check: boolean;
+  days: WaterBalanceDay[];
+}
+
+export interface LandslideDemCell {
+  row: number;
+  col: number;
+  elevation_m: number;
+  slope_deg: number;
+  aspect_deg: number;
+  susceptibility: number;
+  level: SusceptLevel;
+}
+
+export interface LandslideDemResponse {
+  cols: number;
+  rows: number;
+  resolution_m: number;
+  district: string;
+  note: string;
+  level_counts: Record<SusceptLevel, number>;
+  cells: LandslideDemCell[];
+}

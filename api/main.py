@@ -1752,6 +1752,192 @@ def get_extremes_bulletin(
         "states": states_risk
     }
 
+# =============================================================
+# STEP 11 — Downstream disaster management (Shimla / HP focus)
+# =============================================================
+
+@app.get("/api/impact/water-balance")
+def get_water_balance(
+    forecast_rain: float = Query(85.0, ge=0, le=500, description="24h blended rainfall (mm)"),
+    api_30: float = Query(142.0, ge=0, le=400, description="30-day API index (mm)"),
+    scenario_pct: float = Query(0.0, ge=-50, le=100, description="+/- % rainfall scenario adjustment"),
+):
+    """
+    Physics-based 10-day soil-moisture water balance for Shimla, HP.
+    dS/dt = P - R - ET  (mass conservation: R=ET=0 when P=0)
+    Returns daily S, R, ET, and flood-risk classification.
+    """
+    import datetime as dt
+
+    # Apply scenario scaling to rainfall
+    rain_factor = 1.0 + scenario_pct / 100.0
+    P0 = max(0.0, forecast_rain * rain_factor)
+
+    # Bucket parameters (Shimla sub-catchment)
+    S_max   = 160.0    # max soil water storage (mm)
+    ET_max  = 3.5      # max daily PET (mm/day) – monsoon season
+    Ks      = 0.04     # recession constant for subsurface flow
+    beta    = 2.2      # non-linear runoff exponent
+    FLOOD_THRESH_80 = 120.0  # 80th-percentile flood threshold for S (mm)
+
+    # Initial state from API_30
+    S0 = min(S_max, (api_30 / 180.0) * S_max)
+
+    # 10-day rainfall sequence: heavy on days 1-3, tapering decay
+    rng = np.random.default_rng(int(P0 * 100) % (2**31))
+    rainfall_sequence = np.array([
+        P0,
+        P0 * rng.uniform(0.70, 0.95),
+        P0 * rng.uniform(0.45, 0.75),
+        P0 * rng.uniform(0.20, 0.45),
+        P0 * rng.uniform(0.10, 0.30),
+        P0 * rng.uniform(0.05, 0.20),
+        P0 * rng.uniform(0.02, 0.12),
+        P0 * rng.uniform(0.01, 0.08),
+        P0 * rng.uniform(0.01, 0.05),
+        P0 * rng.uniform(0.00, 0.04),
+    ])
+    rainfall_sequence = np.maximum(0.0, rainfall_sequence)
+
+    base_date = dt.date.today()
+    days = []
+    S = S0
+
+    for i, P in enumerate(rainfall_sequence):
+        day_date = base_date + dt.timedelta(days=i)
+
+        # PHYSICS: mass conservation — R and ET are zero when P = 0
+        if P <= 0.0:
+            R = 0.0
+            ET = 0.0
+            dS = 0.0
+        else:
+            # Saturation-excess runoff (non-linear)
+            saturation_frac = S / S_max
+            R = max(0.0, P * (saturation_frac ** beta))
+            # Actual ET scales with soil moisture availability
+            ET = ET_max * min(1.0, S / (0.5 * S_max))
+            dS = P - R - ET
+
+        S_new = max(0.0, min(S_max, S + dS))
+        # Subsurface recession on wet days
+        if P > 0 and S > 0.6 * S_max:
+            baseflow = Ks * S
+            S_new = max(0.0, S_new - baseflow)
+            R += baseflow
+
+        # Flood-risk classification based on S
+        if S_new >= FLOOD_THRESH_80 * 1.25:
+            risk = "CRITICAL"
+        elif S_new >= FLOOD_THRESH_80:
+            risk = "HIGH"
+        elif S_new >= FLOOD_THRESH_80 * 0.75:
+            risk = "MODERATE"
+        else:
+            risk = "LOW"
+
+        days.append({
+            "day": i + 1,
+            "date": day_date.isoformat(),
+            "date_label": day_date.strftime("%d %b"),
+            "rainfall_mm": round(float(P), 2),
+            "soil_moisture_mm": round(float(S_new), 2),
+            "soil_moisture_pct": round(float(S_new / S_max * 100), 1),
+            "runoff_mm": round(float(R), 2),
+            "et_mm": round(float(ET), 2),
+            "delta_S": round(float(S_new - S), 2),
+            "flood_risk": risk,
+            # Verify mass conservation: R=ET=0 when P=0
+            "mass_conserved": bool(P > 0 or (R == 0.0 and ET == 0.0)),
+        })
+        S = S_new
+
+    # Peak values
+    peak_runoff = max(d["runoff_mm"] for d in days)
+    peak_S = max(d["soil_moisture_mm"] for d in days)
+
+    return {
+        "scenario_pct": scenario_pct,
+        "effective_rainfall_day1": round(P0, 2),
+        "initial_soil_moisture_mm": round(S0, 2),
+        "initial_soil_moisture_pct": round(S0 / S_max * 100, 1),
+        "s_max_mm": S_max,
+        "flood_threshold_80p_mm": FLOOD_THRESH_80,
+        "peak_runoff_mm": round(peak_runoff, 2),
+        "peak_soil_moisture_mm": round(peak_S, 2),
+        "mass_conservation_check": all(d["mass_conserved"] for d in days),
+        "days": days,
+    }
+
+
+@app.get("/api/impact/landslide-dem")
+def get_landslide_dem():
+    """
+    Synthetic 30m-style DEM-derived landslide susceptibility grid for Shimla District.
+    Returns a grid of cells with elevation, slope, aspect and susceptibility score.
+    Uses deterministic seeded generation to simulate DEM terrain analysis.
+    """
+    rng = np.random.default_rng(42)  # fixed seed for reproducibility
+
+    COLS, ROWS = 20, 16  # 20x16 grid cells = 320 cells at 30m resolution
+
+    # Realistic Shimla terrain: elevation 1400-3800m, steep slopes 20-50 deg
+    base_elev = np.linspace(1400, 3800, ROWS)
+    cells = []
+
+    for r in range(ROWS):
+        for c in range(COLS):
+            elev = float(base_elev[r] + rng.uniform(-150, 150) + c * 15)
+            slope = float(np.clip(25 + rng.normal(12, 8) + (elev - 1400) / 100, 5, 65))
+            # Aspect: south-facing (135-225°) more susceptible due to solar loading
+            aspect = float(rng.uniform(0, 360))
+            aspect_factor = 1.0 + 0.3 * abs(np.cos(np.radians(aspect - 180)))
+
+            # Susceptibility model: weighted combination (discriminative, not forecast)
+            # slope dominates (0.55), elevation (0.25), aspect (0.20)
+            slope_norm  = min(1.0, slope / 55.0)
+            elev_norm   = min(1.0, max(0.0, (elev - 1200) / 2600))
+            aspect_norm = aspect_factor / 1.6
+
+            suscept = (
+                0.55 * slope_norm +
+                0.25 * elev_norm  +
+                0.20 * aspect_norm +
+                rng.uniform(-0.05, 0.05)
+            )
+            suscept = float(np.clip(suscept, 0.0, 1.0))
+
+            if suscept >= 0.75:
+                level = "VERY_HIGH"
+            elif suscept >= 0.55:
+                level = "HIGH"
+            elif suscept >= 0.35:
+                level = "MODERATE"
+            else:
+                level = "LOW"
+
+            cells.append({
+                "row": r, "col": c,
+                "elevation_m": round(elev, 0),
+                "slope_deg": round(slope, 1),
+                "aspect_deg": round(aspect, 1),
+                "susceptibility": round(suscept, 3),
+                "level": level,
+            })
+
+    counts = {lv: sum(1 for c in cells if c["level"] == lv)
+              for lv in ["VERY_HIGH", "HIGH", "MODERATE", "LOW"]}
+
+    return {
+        "cols": COLS, "rows": ROWS,
+        "resolution_m": 30,
+        "district": "Shimla, Himachal Pradesh",
+        "note": "Synthetic DEM-derived susceptibility for illustration. Discriminative accuracy only — NOT a real-time forecast.",
+        "level_counts": counts,
+        "cells": cells,
+    }
+
+
 @app.get("/api/pinn/study-metrics")
 def get_pinn_study_metrics():
     return PINNEngine.get_study_metrics()

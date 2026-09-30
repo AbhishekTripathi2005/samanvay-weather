@@ -35,7 +35,9 @@ import {
   PINNStudyMetrics,
   MapGridResponse,
   PlumeResponse,
-  WeightsMapResponse
+  WeightsMapResponse,
+  WaterBalanceResponse,
+  LandslideDemResponse
 } from "./types";
 
 
@@ -367,4 +369,24 @@ export async function fetchExtremesEvents(variable: string = "rainfall", thresho
 // S9-6: Enhanced explain v2
 export async function fetchExtremesExplainV2(district: string): Promise<ExtremesExplainV2Response> {
   return request<ExtremesExplainV2Response>(`/extremes/explain/v2?district=${encodeURIComponent(district)}`);
+}
+
+// =============================================================
+// STEP 11 — Disaster Management fetch functions
+// =============================================================
+
+export async function fetchWaterBalance(params: {
+  forecast_rain?: number;
+  api_30?: number;
+  scenario_pct?: number;
+}): Promise<WaterBalanceResponse> {
+  const qs = new URLSearchParams();
+  if (params.forecast_rain !== undefined) qs.set("forecast_rain", params.forecast_rain.toString());
+  if (params.api_30       !== undefined) qs.set("api_30",         params.api_30.toString());
+  if (params.scenario_pct !== undefined) qs.set("scenario_pct",   params.scenario_pct.toString());
+  return request<WaterBalanceResponse>(`/impact/water-balance?${qs.toString()}`);
+}
+
+export async function fetchLandslideDem(): Promise<LandslideDemResponse> {
+  return request<LandslideDemResponse>("/impact/landslide-dem");
 }
